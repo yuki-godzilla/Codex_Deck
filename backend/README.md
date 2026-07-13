@@ -31,3 +31,13 @@ python -m unittest discover -s backend\tests -v
 WebSocketは先に購読を登録してからreplayを送るため、その間に受信したイベントを取りこぼさない。重複イベントはDeck event IDでクライアントが排除する。`POST /work`へ渡された依頼本文は、Deck event payloadには複製しない。
 
 SQLiteのファイルパス、起動時の`SqliteEventStore`構成、認証、承認応答、ブラウザUIは次の実装単位で追加する。
+
+## ローカルデモ
+
+実Codexを起動せずUI/APIを確認する場合だけ、明示的に`--demo`を指定する。
+
+```powershell
+python -m codex_deck.main --demo --database codex-deck-demo.sqlite
+```
+
+このモードは決定的なfake Thread/Turn IDを返すだけで、Codex CLIやApp Serverへ接続しない。本番のApp Server構成ではない。

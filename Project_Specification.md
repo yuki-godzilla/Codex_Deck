@@ -101,6 +101,9 @@ Codex_Deck/
 │   │   ├── events.py
 │   │   └── scheduler.py
 │   └── tests/
+├── frontend/
+│   ├── src/
+│   └── package.json
 ├── documents/
 │   └── ai/
 │       ├── AI_Working_Rules.md
@@ -112,7 +115,7 @@ Codex_Deck/
     └── research/
 ```
 
-`backend/`には、App Serverのstdio JSON-RPC transport、Bridge契約、workspace排他Scheduler、SQLite対応Deck event store、FastAPI HTTP/WebSocket API、およびfake App Serverによるunit testを配置した。`frontend/`、SQLiteファイルの起動時構成、実 App Serverを使う結合test、認証、起動設定は未作成である。
+`backend/`には、App Serverのstdio JSON-RPC transport、Bridge契約、workspace排他Scheduler、SQLite対応Deck event store、FastAPI HTTP/WebSocket API、およびfake App Serverによるunit testを配置した。`frontend/`には、workspace/Active work/eventを表示し依頼開始を行うReact UI縦スライスを配置した。SQLiteファイルの本番起動構成、実 App Serverを使う結合test、認証、PWA、起動設定は未作成である。
 
 ### 6.2 実装開始後の責務境界
 
@@ -157,6 +160,7 @@ Codex_Deck/
 | 2026-07-14 | App Server stdio adapter | Python 3.12標準ライブラリ、fake JSON-RPC transport | `initialize`/`initialized`、`thread/start`、`turn/start`の順序と接続前拒否を2 unit testで確認。実 App Server結合testは未実施。 |
 | 2026-07-14 | HTTP API / event replay | FastAPI、fake App Server | health、work開始、workspace競合の`409`、event IDによるreplay、依頼本文をevent payloadに複製しないことを3 unit testで確認。 |
 | 2026-07-14 | SQLite / WebSocket event配信 | SQLite、FastAPI TestClient | SQLite再open後のevent replay、WebSocketのreplayとリアルタイム配信を3 unit testで確認。 |
+| 2026-07-14 | UI縦スライス | React/Vite、明示的なfake App Server | production build、ローカルHTTP配信、デモThread/Turn/event生成を確認。ブラウザ連携不備により実画面のviewport/操作確認は保留。 |
 
 ### 8.3 未確認範囲
 
@@ -173,7 +177,8 @@ Codex_Deck/
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を本プロジェクトへ導入済み。 |
 | App Server PoC | 条件付確認済み | P0-0/1を確認し、P0-2ではread-onlyのworkspace A/B並行と同一workspace二重起動を確認。共有・競合・変更を伴う並行は残件。 |
 | Backend基盤 / API | 実装中 | Scheduler、Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、fake transport unit testを実装。 |
-| Web UI / 運用構成 | 未着手 | frontend、SQLiteファイルの起動時構成、実 App Server結合test、認証、設定を未作成。 |
+| Web UI | 検証保留 | 最初のレスポンシブ縦スライスを実装。実ブラウザの操作・目視確認が未実施のため、完了扱いにしない。 |
+| 運用構成 | 未着手 | SQLiteファイルの本番起動時構成、実 App Server結合test、認証、PWA、設定を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |
 
 ## 10. 関連資料・参考URL
