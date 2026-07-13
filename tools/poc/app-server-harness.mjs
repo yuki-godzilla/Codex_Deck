@@ -7,6 +7,7 @@ if (!cwd) {
   throw new Error("Set CODEX_DECK_POC_CWD to an absolute disposable workspace path.");
 }
 const scenario = process.env.CODEX_DECK_POC_SCENARIO ?? "basic";
+const readThreadId = process.env.CODEX_DECK_POC_READ_THREAD_ID ?? null;
 if (!new Set(["basic", "approval", "command-approval", "control", "active-control", "failure"]).has(scenario)) {
   throw new Error("CODEX_DECK_POC_SCENARIO must be basic, approval, command-approval, control, active-control, or failure.");
 }
@@ -69,6 +70,7 @@ try {
   });
   write({ method: "initialized", params: {} });
   const before = await request("thread/list", { cwd, limit: 10, useStateDbOnly: true });
+  const externalRead = readThreadId ? await request("thread/read", { threadId: readThreadId }) : null;
   const started = await request("thread/start", {
     approvalPolicy: ["active-control", "failure"].includes(scenario) ? "never" : "untrusted",
     cwd,
@@ -139,6 +141,7 @@ try {
     startedAt,
     initialize: { platformFamily: initialize.platformFamily, platformOs: initialize.platformOs, userAgent: initialize.userAgent },
     threadListBeforeCount: before.data?.length ?? before.threads?.length ?? null,
+    requestedThreadRead: externalRead ? Boolean(externalRead.thread) : null,
     threadIdHash: redactId(threadId),
     turnIdHash: redactId(turn.turn.id),
     threadRead: Boolean(read.thread),

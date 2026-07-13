@@ -51,7 +51,7 @@
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を導入。 |
 | PoC-0 | 確認済み | `codex-cli 0.144.1`からTypeScript/JSON Schemaを生成し、tree hashを記録した。 |
 | PoC-1 | 条件付確認済み | stdio handshake、Thread操作、主要Item、完了、resume、file/command approvalの`decline`、実行中Turnのsteer/interrupt受理、強制終了後の再送なし、再起動後の保存Thread読取を確認。実行中Turnの公式復帰は未確認で、中断扱いとする。 |
-| PoC-2 | 未判定 | 同一接続内のresumeのみ確認。CLI/VS Code共有、競合、workspace別並行は未検証。 |
+| PoC-2 | 一部確認済み | CLI起点ThreadはID指定の`thread/read`で読めたが、同cwdの`thread/list`では検出できなかった。VS Code共有、競合、workspace別並行は未検証。 |
 | アプリ実装 | 未着手 | ユーザーのレビューとPoCゲート完了を待つ。 |
 
 ## 5. 未決事項
