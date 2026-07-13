@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnec
 from pydantic import BaseModel, Field
 
 from .bridge import StartWorkRequest
+from .approvals import ApprovalBroker, PendingApproval
 from .events import DeckEvent
 from .files import FileAccessError, FileEntry, ReadOnlyFileService, TextFile
 from .git import GitAccessError, GitDiff, GitFileStatus, GitStatus, ReadOnlyGitService
@@ -86,6 +87,13 @@ class GitDiffBody(BaseModel):
     content: str
     truncated: bool
 
+class ApprovalBody(BaseModel):
+    request_id: int; kind: str; thread_id: str; turn_id: str; item_id: str
+    reason: str | None; command: str | None; cwd: str | None; received_at: datetime
+
+class ApprovalDecisionBody(BaseModel):
+    decision: str = Field(min_length=1)
+
 
 def _work_body(work: ActiveWork) -> ActiveWorkBody:
     return ActiveWorkBody(
@@ -148,6 +156,9 @@ def _git_status_body(status_value: GitStatus) -> GitStatusBody:
 def _git_diff_body(diff: GitDiff) -> GitDiffBody:
     return GitDiffBody(path=diff.path, mode=diff.mode, content=diff.content, truncated=diff.truncated)
 
+def _approval_body(value: PendingApproval) -> ApprovalBody:
+    return ApprovalBody(**{field: getattr(value, field) for field in ApprovalBody.model_fields})
+
 
 def create_app(
     service: DeckService,
@@ -155,12 +166,28 @@ def create_app(
     workspaces: WorkspaceStore | None = None,
     files: ReadOnlyFileService | None = None,
     git: ReadOnlyGitService | None = None,
+    approvals: ApprovalBroker | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Codex Deck API", version="0.1.0")
 
     @app.get("/healthz")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/api/v1/approvals", response_model=list[ApprovalBody])
+    def list_approvals() -> list[ApprovalBody]:
+        return [] if approvals is None else [_approval_body(item) for item in approvals.list()]
+
+    @app.post("/api/v1/approvals/{request_id}/decision", response_model=ApprovalBody)
+    def decide_approval(request_id: int, body: ApprovalDecisionBody) -> ApprovalBody:
+        if approvals is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="approval broker is not configured")
+        try:
+            return _approval_body(approvals.decide(request_id, body.decision))
+        except KeyError as error:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="approval not found") from error
+        except ValueError as error:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from error
 
     @app.get("/api/v1/workspaces", response_model=list[WorkspaceBody])
     def list_workspaces() -> list[WorkspaceBody]:

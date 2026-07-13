@@ -76,7 +76,7 @@
 ## 7. 次に進める作業
 
 1. **UI検証** — ブラウザ連携を復旧し、代表viewportでworkspace/Thread/Turn縦スライスの実画面・操作を確認する。完了まで次のUI単位へ進まない。
-2. **MVP基盤** — App Server adapterの実機結合test、承認イベントと安全な応答、Gitのrename/binary/巨大diff処理を追加する。
+2. **MVP基盤** — App Server adapterとApproval Brokerの実機結合test、承認監査永続化、Gitのrename/binary/巨大diff処理を追加する。
 3. **P0: PoC-2残件** — VS Code共有、同一Thread/承認競合、変更を伴うworkspace別並行を検証する。
 4. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
 
@@ -104,3 +104,4 @@
 - 2026-07-14: React/Viteで最初のworkspace/Active work/event表示UIを実装。ビルドとデモBackend連携は確認したが、ブラウザ連携の実行モジュール不在で実画面検証は保留。
 - 2026-07-14: 許可root内の起動時明示workspace登録と、秘密情報・越境を拒否する読み取り専用File Adapterを追加。認証前にBrowserから任意pathを登録するAPIは提供しない。
 - 2026-07-14: Git statusと許可済み1ファイルdiffの読み取り専用adapterを追加。固定の非対話コマンドだけを使い、commit/stage/checkout/reset/merge/push/pullは提供しない。
+- 2026-07-14: stableなcommand/file approval requestを保留し、明示的な公式decisionだけを返すApproval Brokerを追加。実App Server transport結合と未対応approval種別は未実装。

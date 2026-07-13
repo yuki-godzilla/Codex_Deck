@@ -9,6 +9,7 @@
 - `create_app`: workspaceのActive work、HTTP replay、WebSocketのイベント配信を提供するFastAPI
 - `WorkspaceStore` / `ReadOnlyFileService`: 許可root配下で明示登録したworkspaceだけを、秘密情報・越境symlinkを除外して読み取り専用で扱う
 - `ReadOnlyGitService`: 許可済みworkspaceのGit statusとファイル単位diffだけを、固定の非対話readコマンドで取得する
+- `ApprovalBroker`: App Serverのstableなcommand/file approval requestを保留し、人が選んだ公式decisionだけを返す
 
 ## 開発用セットアップ
 
@@ -31,6 +32,8 @@ python -m unittest discover -s backend\tests -v
 | `GET` | `/api/v1/workspaces/{workspace_id}/file?path=...` | 許可済みUTF-8テキストの読み取り専用プレビュー |
 | `GET` | `/api/v1/workspaces/{workspace_id}/git/status` | branchと変更状態の読み取り専用要約 |
 | `GET` | `/api/v1/workspaces/{workspace_id}/git/diff?path=...` | 許可済み1ファイルのunstaged/staged diff |
+| `GET` | `/api/v1/approvals` | 保留中のcommand/file approval一覧 |
+| `POST` | `/api/v1/approvals/{request_id}/decision` | `accept` / `acceptForSession` / `decline` / `cancel`を明示応答 |
 | `POST` | `/api/v1/workspaces/{workspace_id}/work` | Thread/Turn開始。競合時は`409 workspace_busy` |
 | `GET` | `/api/v1/events?after={event_id}` | event ID以降の再接続用replay |
 | `WS` | `/api/v1/events/stream?after={event_id}` | replay後のリアルタイムイベント配信 |
@@ -53,3 +56,5 @@ python -m codex_deck.main --demo --database codex-deck-demo.sqlite `
 workspaceの追加は現在、起動時のローカル引数だけで行う。認証前のBrowser APIから任意パスを登録するエンドポイントは提供しない。`.env`、鍵形式、credential、`.git`、`.ssh`、`.codex`、`.claude`は一覧・読取の対象外であり、外部へ解決するsymlinkは追跡しない。
 
 Git Adapterは`status`、`rev-parse`、`diff`だけを非対話で起動する。commit、stage、checkout、reset、merge、push、pull、任意Git引数の実行は提供しない。差分は許可済みの1ファイルだけを対象にし、サイズ上限で切り詰める。
+
+承認Brokerはstable APIの`item/commandExecution/requestApproval`と`item/fileChange/requestApproval`だけを対象にする。未対応のpolicy amendmentやpermissions requestを独自形式へ変換しない。実App Server transportとの結合はlive PoCで確認するまで有効化しない。

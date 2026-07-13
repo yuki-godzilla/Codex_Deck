@@ -6,6 +6,7 @@ protect the App Server boundary.
 """
 
 from .app_server import AppServerStdioClient, StdioJsonRpcTransport
+from .approvals import ApprovalBroker
 from .api import create_app
 from .bridge import Bridge, StartWorkRequest
 from .events import DeckEvent, EventStore, SqliteEventStore
@@ -18,6 +19,7 @@ from .workspaces import WorkspaceStore
 __all__ = [
     "ActiveWork",
     "AppServerStdioClient",
+    "ApprovalBroker",
     "Bridge",
     "create_app",
     "DeckEvent",

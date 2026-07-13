@@ -166,6 +166,7 @@ Codex_Deck/
 | 2026-07-14 | UI縦スライス | React/Vite、明示的なfake App Server | production build、ローカルHTTP配信、デモThread/Turn/event生成を確認。ブラウザ連携不備により実画面のviewport/操作確認は保留。 |
 | 2026-07-14 | workspace / File Adapter | SQLite、temporary filesystem | 許可root外の登録拒否、秘密情報のdeny、親ディレクトリ越境拒否、binary拒否、Browser APIが絶対pathを返さないことをunit testで確認。 |
 | 2026-07-14 | Git read adapter | temporary Git repository | noninteractiveなstatus/diff、秘密対象のstatus/diff除外、Browser APIのstatus/diff読取をunit testで確認。Git変更操作は未実装。 |
+| 2026-07-14 | Approval Broker | fake App Server request | command/file approvalを保留し、明示的な公式decisionだけを応答するAPIをunit testで確認。実App Server結合は未実施。 |
 
 ### 8.3 未確認範囲
 
@@ -183,6 +184,7 @@ Codex_Deck/
 | App Server PoC | 条件付確認済み | P0-0/1を確認し、P0-2ではread-onlyのworkspace A/B並行と同一workspace二重起動を確認。共有・競合・変更を伴う並行は残件。 |
 | Backend基盤 / API | 実装中 | Scheduler、Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、fake transport unit testを実装。 |
 | Workspace / File / Git Adapter | 実装中 | 許可root内の明示登録、絶対path非公開、読み取り専用一覧/UTF-8プレビュー、secret/外部symlink deny、Git statusと1ファイルdiffを実装。Git変更操作は未実装。 |
+| Approval Broker | 実装中 | stableなcommand/file approvalの保留・一覧・公式decision応答を実装。実App Server transport結合、permissions/network amendment、監査永続化は未実装。 |
 | Web UI | 検証保留 | 最初のレスポンシブ縦スライスを実装。実ブラウザの操作・目視確認が未実施のため、完了扱いにしない。 |
 | 運用構成 | 未着手 | SQLiteファイルの本番起動時構成、実 App Server結合test、認証、PWA、設定を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |
