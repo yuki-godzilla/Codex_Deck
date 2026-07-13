@@ -49,8 +49,9 @@
 | 公式仕様調査 | 確認済み | App Server、CLI設定、AGENTS.md、Windows sandboxを一次情報で調査し、確認済み/PoC必要/未確認を分類済み。 |
 | 要件定義 | 確認済み | メイン要件、ユースケース、画面設計、PoC、リスクを作成済み。 |
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を導入。 |
-| PoC-0/1 | 未着手 | App Server schema生成、stdio接続、Thread/Turn/Item/approval/interruptを確認する。 |
-| PoC-2 | 未着手 | CLI/VS Code/Deck間のThread共有、同時操作、workspace別並行実行を確認する。 |
+| PoC-0 | 確認済み | `codex-cli 0.144.1`からTypeScript/JSON Schemaを生成し、tree hashを記録した。 |
+| PoC-1 | 一部確認済み | stdio handshake、Thread操作、read-only Turn、主要Item、完了、resumeを確認。approval、steer、interrupt、障害は未確認。 |
+| PoC-2 | 未判定 | 同一接続内のresumeのみ確認。CLI/VS Code共有、競合、workspace別並行は未検証。 |
 | アプリ実装 | 未着手 | ユーザーのレビューとPoCゲート完了を待つ。 |
 
 ## 5. 未決事項
@@ -74,9 +75,8 @@
 
 ## 7. 次に進める作業
 
-1. **P0: PoC-0** — 対象Codex CLIでApp Server TypeScript/JSON Schemaを生成し、versionと契約を固定する。
-2. **P0: PoC-1** — Windows上のstdio接続でThread/Turn/Item/approval/steer/interruptを観測する。
-3. **P0: PoC-2** — CLI、VS Code、App Server間のThread共有、同時操作、workspace別並行実行を検証する。
+1. **P0: PoC-1継続** — command/file approval、`turn/steer`、`turn/interrupt`、unknown Item、App Server障害を観測する。
+2. **P0: PoC-2** — CLI、VS Code、App Server間のThread共有、同時操作、workspace別並行実行を検証する。
 4. **レビュー** — PoC結果を要件定義、画面文言、リスク一覧へ反映し、MVP実装可否を決定する。
 5. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
 
@@ -95,3 +95,4 @@
 
 - 2026-07-13: 要件定義、公式仕様調査、ユースケース、画面設計、PoC計画、リスク一覧を作成。アプリ実装は未開始。
 - 2026-07-14: AI-Dev-Process-Documentsのルールに基づくREADME、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を導入。
+- 2026-07-14: P0-0を完了し、P0-1のstdio基本経路を確認。詳細は`docs/poc/CODEX_DECK_POC_RESULTS.md`を参照。

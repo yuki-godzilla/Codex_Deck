@@ -4,7 +4,7 @@
 
 Codex Deckの実装前に、公式仕様で存在が確認できても、Windows・CLI・VS Code・モバイルPWA・複数クライアントの組合せで保証範囲が不明な事項を検証する。
 
-PoCはアプリ本体の実装ではない。各PoCは小さな検証用スクリプト/記録に限定し、結果を[公式機能調査](../research/CODEX_OFFICIAL_CAPABILITY_RESEARCH.md)と[要件定義書](../requirements/CODEX_DECK_REQUIREMENTS.md)へ反映する。秘密情報、実際の認証token、会話本文、個人ファイルは成果物に含めない。
+PoCはアプリ本体の実装ではない。各PoCは小さな検証用スクリプト/記録に限定し、結果を[公式機能調査](../research/CODEX_OFFICIAL_CAPABILITY_RESEARCH.md)と[要件定義書](../requirements/CODEX_DECK_REQUIREMENTS.md)へ反映する。実施結果は[PoC実施結果](CODEX_DECK_POC_RESULTS.md)に記録する。秘密情報、実際の認証token、会話本文、個人ファイルは成果物に含めない。
 
 ## 2. 共通実施環境
 

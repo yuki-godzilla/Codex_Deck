@@ -142,6 +142,7 @@ Codex_Deck/
 | 2026-07-13 | OpenAI公式資料とローカルCLIによるApp Server、CLI、Windows設定の調査 | Windows、`codex-cli 0.144.1` | 確認済み/PoC必要/未確認を分類済み |
 | 2026-07-13 | 要件定義文書群のローカルリンク、コードフェンス、末尾空白、Git whitespace確認 | 本リポジトリ | 通過 |
 | 2026-07-14 | AI文書体系の導入 | 本リポジトリ | 導入済み。アプリ実装・PoCは未実施 |
+| 2026-07-14 | P0-0とP0-1基本経路 | Windows、`codex-cli 0.144.1` | schema生成、stdio handshake、Thread/Turn/Item/完了/resumeを確認。詳細は`docs/poc/CODEX_DECK_POC_RESULTS.md`。 |
 
 ### 8.3 未確認範囲
 
@@ -157,7 +158,7 @@ Codex_Deck/
 | --- | --- | --- |
 | 要件定義 | 確認済み | 要件、ユースケース、画面設計、PoC、リスク、公式調査を作成済み。 |
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を本プロジェクトへ導入済み。 |
-| App Server PoC | 未着手 | 実装開始前のP0ゲート。 |
+| App Server PoC | 一部確認済み | P0-0完了、P0-1の基本経路を確認。承認・steer・interrupt・障害・P0-2は未判定。 |
 | アプリ本体 | 未着手 | framework、frontend、backend、DB、設定、依存関係を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |
 
