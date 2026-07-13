@@ -100,6 +100,7 @@ Codex_Deck/
 │   │   ├── bridge.py
 │   │   ├── events.py
 │   │   ├── files.py
+│   │   ├── git.py
 │   │   ├── scheduler.py
 │   │   └── workspaces.py
 │   └── tests/
@@ -127,7 +128,7 @@ Codex_Deck/
 | Backend API | Deck API、認証、WebSocket、通知、UI補助状態 | Active work、event replay、WebSocket配信を実装。SQLite event storeは実装済みだが、起動時のDB構成、認証、通知は未実装。Codex Thread正本やユーザーtokenをDBへ複製しない。 |
 | Bridge | App Server stdio、JSON-RPC、event順序、再同期、mask、process監視 | stdio start/initialize/thread-start/turn-startの最小adapterを実装。実 App Server結合test、event永続化、再同期、maskは未実装。 |
 | Scheduler | workspace lock、Active work、停止/中断、再起動時の状態遷移 | 前回Turnの自動再実行を禁止する。 |
-| File/Git Adapter | 許可root配下の読み取り、Git状態/diff、deny/mask | workspaceを起動時ローカル引数で明示登録し、UTF-8 textの一覧/読取のみ実装。Git状態/diffは未実装。直接編集・自由なOS探索を提供しない。 |
+| File/Git Adapter | 許可root配下の読み取り、Git状態/diff、deny/mask | workspaceを起動時ローカル引数で明示登録し、UTF-8 textの一覧/読取、Git status、許可済み1ファイルdiffを実装。直接編集・自由なOS探索・Git変更操作を提供しない。 |
 | Notification Adapter | in-app/PWA/ntfyの配送・既読・quiet hours | SMAIのコード、DB、設定、topicと共有しない。 |
 
 ## 7. 外部インターフェース
@@ -164,6 +165,7 @@ Codex_Deck/
 | 2026-07-14 | SQLite / WebSocket event配信 | SQLite、FastAPI TestClient | SQLite再open後のevent replay、WebSocketのreplayとリアルタイム配信を3 unit testで確認。 |
 | 2026-07-14 | UI縦スライス | React/Vite、明示的なfake App Server | production build、ローカルHTTP配信、デモThread/Turn/event生成を確認。ブラウザ連携不備により実画面のviewport/操作確認は保留。 |
 | 2026-07-14 | workspace / File Adapter | SQLite、temporary filesystem | 許可root外の登録拒否、秘密情報のdeny、親ディレクトリ越境拒否、binary拒否、Browser APIが絶対pathを返さないことをunit testで確認。 |
+| 2026-07-14 | Git read adapter | temporary Git repository | noninteractiveなstatus/diff、秘密対象のstatus/diff除外、Browser APIのstatus/diff読取をunit testで確認。Git変更操作は未実装。 |
 
 ### 8.3 未確認範囲
 
@@ -180,7 +182,7 @@ Codex_Deck/
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を本プロジェクトへ導入済み。 |
 | App Server PoC | 条件付確認済み | P0-0/1を確認し、P0-2ではread-onlyのworkspace A/B並行と同一workspace二重起動を確認。共有・競合・変更を伴う並行は残件。 |
 | Backend基盤 / API | 実装中 | Scheduler、Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、fake transport unit testを実装。 |
-| Workspace / File Adapter | 実装中 | 許可root内の明示登録、絶対path非公開、読み取り専用一覧/UTF-8プレビュー、secret/外部symlink denyを実装。Git/diffは未実装。 |
+| Workspace / File / Git Adapter | 実装中 | 許可root内の明示登録、絶対path非公開、読み取り専用一覧/UTF-8プレビュー、secret/外部symlink deny、Git statusと1ファイルdiffを実装。Git変更操作は未実装。 |
 | Web UI | 検証保留 | 最初のレスポンシブ縦スライスを実装。実ブラウザの操作・目視確認が未実施のため、完了扱いにしない。 |
 | 運用構成 | 未着手 | SQLiteファイルの本番起動時構成、実 App Server結合test、認証、PWA、設定を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |

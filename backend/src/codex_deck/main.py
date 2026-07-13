@@ -12,6 +12,7 @@ from .api import create_app
 from .bridge import Bridge
 from .events import SqliteEventStore
 from .files import ReadOnlyFileService
+from .git import ReadOnlyGitService
 from .scheduler import Scheduler
 from .service import DeckService
 from .workspaces import WorkspaceStore
@@ -60,7 +61,12 @@ def create_local_app(
         events=events,
     )
     try:
-        app = create_app(service, workspaces=workspaces, files=ReadOnlyFileService(workspaces))
+        app = create_app(
+            service,
+            workspaces=workspaces,
+            files=ReadOnlyFileService(workspaces),
+            git=ReadOnlyGitService(workspaces),
+        )
         app.router.on_shutdown.append(events.close)
         app.router.on_shutdown.append(workspaces.close)
         return app

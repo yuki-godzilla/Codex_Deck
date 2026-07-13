@@ -8,6 +8,7 @@
 - `EventStore` / `SqliteEventStore`: browser再接続用のDeck event ID。Codex本文の正本は保存しない
 - `create_app`: workspaceのActive work、HTTP replay、WebSocketのイベント配信を提供するFastAPI
 - `WorkspaceStore` / `ReadOnlyFileService`: 許可root配下で明示登録したworkspaceだけを、秘密情報・越境symlinkを除外して読み取り専用で扱う
+- `ReadOnlyGitService`: 許可済みworkspaceのGit statusとファイル単位diffだけを、固定の非対話readコマンドで取得する
 
 ## 開発用セットアップ
 
@@ -28,6 +29,8 @@ python -m unittest discover -s backend\tests -v
 | `GET` | `/api/v1/workspaces` | 明示登録済みworkspaceの一覧。ローカル絶対パスは返さない |
 | `GET` | `/api/v1/workspaces/{workspace_id}/files?path=...` | 許可済みディレクトリの読み取り専用一覧 |
 | `GET` | `/api/v1/workspaces/{workspace_id}/file?path=...` | 許可済みUTF-8テキストの読み取り専用プレビュー |
+| `GET` | `/api/v1/workspaces/{workspace_id}/git/status` | branchと変更状態の読み取り専用要約 |
+| `GET` | `/api/v1/workspaces/{workspace_id}/git/diff?path=...` | 許可済み1ファイルのunstaged/staged diff |
 | `POST` | `/api/v1/workspaces/{workspace_id}/work` | Thread/Turn開始。競合時は`409 workspace_busy` |
 | `GET` | `/api/v1/events?after={event_id}` | event ID以降の再接続用replay |
 | `WS` | `/api/v1/events/stream?after={event_id}` | replay後のリアルタイムイベント配信 |
@@ -48,3 +51,5 @@ python -m codex_deck.main --demo --database codex-deck-demo.sqlite `
 このモードは決定的なfake Thread/Turn IDを返すだけで、Codex CLIやApp Serverへ接続しない。本番のApp Server構成ではない。
 
 workspaceの追加は現在、起動時のローカル引数だけで行う。認証前のBrowser APIから任意パスを登録するエンドポイントは提供しない。`.env`、鍵形式、credential、`.git`、`.ssh`、`.codex`、`.claude`は一覧・読取の対象外であり、外部へ解決するsymlinkは追跡しない。
+
+Git Adapterは`status`、`rev-parse`、`diff`だけを非対話で起動する。commit、stage、checkout、reset、merge、push、pull、任意Git引数の実行は提供しない。差分は許可済みの1ファイルだけを対象にし、サイズ上限で切り詰める。

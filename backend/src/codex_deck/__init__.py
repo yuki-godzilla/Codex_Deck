@@ -10,6 +10,7 @@ from .api import create_app
 from .bridge import Bridge, StartWorkRequest
 from .events import DeckEvent, EventStore, SqliteEventStore
 from .files import ReadOnlyFileService
+from .git import ReadOnlyGitService
 from .scheduler import ActiveWork, Scheduler, WorkspaceBusyError, WorkState
 from .service import DeckService
 from .workspaces import WorkspaceStore
@@ -23,6 +24,7 @@ __all__ = [
     "DeckService",
     "EventStore",
     "ReadOnlyFileService",
+    "ReadOnlyGitService",
     "Scheduler",
     "StartWorkRequest",
     "StdioJsonRpcTransport",

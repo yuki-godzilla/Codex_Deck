@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from .bridge import StartWorkRequest
 from .events import DeckEvent
 from .files import FileAccessError, FileEntry, ReadOnlyFileService, TextFile
+from .git import GitAccessError, GitDiff, GitFileStatus, GitStatus, ReadOnlyGitService
 from .scheduler import ActiveWork, WorkspaceBusyError
 from .service import DeckService
 from .workspaces import Workspace, WorkspaceStore
@@ -62,6 +63,30 @@ class TextFileBody(BaseModel):
     line_count: int
 
 
+class GitFileStatusBody(BaseModel):
+    path: str
+    index_status: str
+    worktree_status: str
+
+
+class GitStatusBody(BaseModel):
+    is_repository: bool
+    branch: str | None
+    ahead: int
+    behind: int
+    staged_count: int
+    unstaged_count: int
+    untracked_count: int
+    entries: list[GitFileStatusBody]
+
+
+class GitDiffBody(BaseModel):
+    path: str
+    mode: str
+    content: str
+    truncated: bool
+
+
 def _work_body(work: ActiveWork) -> ActiveWorkBody:
     return ActiveWorkBody(
         work_id=work.work_id,
@@ -100,11 +125,36 @@ def _text_file_body(file: TextFile) -> TextFileBody:
     return TextFileBody(path=file.path, content=file.content, size_bytes=file.size_bytes, line_count=file.line_count)
 
 
+def _git_status_body(status_value: GitStatus) -> GitStatusBody:
+    return GitStatusBody(
+        is_repository=status_value.is_repository,
+        branch=status_value.branch,
+        ahead=status_value.ahead,
+        behind=status_value.behind,
+        staged_count=status_value.staged_count,
+        unstaged_count=status_value.unstaged_count,
+        untracked_count=status_value.untracked_count,
+        entries=[
+            GitFileStatusBody(
+                path=entry.path,
+                index_status=entry.index_status,
+                worktree_status=entry.worktree_status,
+            )
+            for entry in status_value.entries
+        ],
+    )
+
+
+def _git_diff_body(diff: GitDiff) -> GitDiffBody:
+    return GitDiffBody(path=diff.path, mode=diff.mode, content=diff.content, truncated=diff.truncated)
+
+
 def create_app(
     service: DeckService,
     *,
     workspaces: WorkspaceStore | None = None,
     files: ReadOnlyFileService | None = None,
+    git: ReadOnlyGitService | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Codex Deck API", version="0.1.0")
 
@@ -143,6 +193,32 @@ def create_app(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="file access denied") from error
         except ValueError as error:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from error
+
+    @app.get("/api/v1/workspaces/{workspace_id}/git/status", response_model=GitStatusBody)
+    def get_git_status(workspace_id: str) -> GitStatusBody:
+        if git is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="git adapter is not configured")
+        try:
+            return _git_status_body(git.status(workspace_id))
+        except KeyError as error:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="workspace not found") from error
+        except GitAccessError as error:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from error
+
+    @app.get("/api/v1/workspaces/{workspace_id}/git/diff", response_model=GitDiffBody)
+    def get_git_diff(
+        workspace_id: str,
+        path: str = Query(min_length=1),
+        staged: bool = False,
+    ) -> GitDiffBody:
+        if git is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="git adapter is not configured")
+        try:
+            return _git_diff_body(git.diff(workspace_id, relative_path=path, staged=staged))
+        except KeyError as error:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="workspace not found") from error
+        except GitAccessError as error:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="git access denied") from error
 
     @app.get("/api/v1/workspaces/{workspace_id}/active-work", response_model=ActiveWorkBody | None)
     def get_active_work(workspace_id: str) -> ActiveWorkBody | None:
