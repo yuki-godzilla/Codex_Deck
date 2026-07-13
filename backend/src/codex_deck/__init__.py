@@ -6,13 +6,20 @@ protect the App Server boundary.
 """
 
 from .app_server import AppServerStdioClient, StdioJsonRpcTransport
+from .api import create_app
 from .bridge import Bridge, StartWorkRequest
+from .events import DeckEvent, EventStore
 from .scheduler import ActiveWork, Scheduler, WorkspaceBusyError, WorkState
+from .service import DeckService
 
 __all__ = [
     "ActiveWork",
     "AppServerStdioClient",
     "Bridge",
+    "create_app",
+    "DeckEvent",
+    "DeckService",
+    "EventStore",
     "Scheduler",
     "StartWorkRequest",
     "StdioJsonRpcTransport",
