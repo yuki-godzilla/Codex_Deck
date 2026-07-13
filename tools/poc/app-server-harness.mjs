@@ -7,8 +7,8 @@ if (!cwd) {
   throw new Error("Set CODEX_DECK_POC_CWD to an absolute disposable workspace path.");
 }
 const scenario = process.env.CODEX_DECK_POC_SCENARIO ?? "basic";
-if (!new Set(["basic", "approval", "command-approval", "control", "active-control"]).has(scenario)) {
-  throw new Error("CODEX_DECK_POC_SCENARIO must be basic, approval, command-approval, control, or active-control.");
+if (!new Set(["basic", "approval", "command-approval", "control", "active-control", "failure"]).has(scenario)) {
+  throw new Error("CODEX_DECK_POC_SCENARIO must be basic, approval, command-approval, control, active-control, or failure.");
 }
 
 const server = spawn("codex", ["app-server", "--stdio"], {
@@ -21,6 +21,7 @@ const notifications = [];
 const serverRequests = [];
 const stderr = [];
 let nextId = 1;
+const exited = new Promise((resolve) => server.once("exit", (code, signal) => resolve({ code, signal })));
 
 const redactId = (value) => createHash("sha256").update(value).digest("hex").slice(0, 12);
 const write = (message) => server.stdin.write(`${JSON.stringify(message)}\n`);
@@ -69,9 +70,9 @@ try {
   write({ method: "initialized", params: {} });
   const before = await request("thread/list", { cwd, limit: 10, useStateDbOnly: true });
   const started = await request("thread/start", {
-    approvalPolicy: scenario === "active-control" ? "never" : "untrusted",
+    approvalPolicy: ["active-control", "failure"].includes(scenario) ? "never" : "untrusted",
     cwd,
-    sandbox: ["approval", "command-approval", "active-control"].includes(scenario) ? "workspace-write" : "read-only",
+    sandbox: ["approval", "command-approval", "active-control", "failure"].includes(scenario) ? "workspace-write" : "read-only",
   });
   const threadId = started.thread.id;
   const turnPromise = request("turn/start", {
@@ -81,6 +82,7 @@ try {
       text: scenario === "approval" ? "Create a file named approval_probe.txt containing exactly APPROVED."
         : scenario === "command-approval" ? "Run the command Get-Date, then reply with its year only."
           : scenario === "active-control" ? "Run exactly Start-Sleep -Seconds 20, then reply with SLEEP DONE."
+            : scenario === "failure" ? "Run exactly Start-Sleep -Seconds 20, then reply with SLEEP DONE."
             : "Explain the numbers from 1 through 1000 one at a time. Do not run commands or modify files.",
     }],
   });
@@ -108,6 +110,23 @@ try {
     const startedNotification = await waitFor("turn/started", 30_000, (entry) => entry.params?.threadId === threadId);
     await sendControl(startedNotification.params.turn.id);
   }
+  if (scenario === "failure") {
+    const startedNotification = await waitFor("turn/started", 30_000, (entry) => entry.params?.threadId === threadId);
+    server.kill();
+    const exit = await exited;
+    turnPromise.catch(() => {});
+    console.log(JSON.stringify({
+      startedAt,
+      scenario,
+      threadIdHash: redactId(threadId),
+      turnIdHash: redactId(startedNotification.params.turn.id),
+      processExit: exit,
+      turnStartRequestCount: 1,
+      pendingRequestMethodsAfterExit: [...pending.values()].map((entry) => entry.method).sort(),
+      retryAttempted: false,
+      stderrLineCount: stderr.length,
+    }, null, 2));
+  } else {
   const turn = await turnPromise;
   if (scenario === "control") {
     await sendControl(turn.turn.id);
@@ -131,6 +150,7 @@ try {
     notificationMethods: itemMethods,
     stderrLineCount: stderr.length,
   }, null, 2));
+  }
 } finally {
   server.kill();
 }
