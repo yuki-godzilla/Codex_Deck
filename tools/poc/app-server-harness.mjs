@@ -6,6 +6,10 @@ const cwd = process.env.CODEX_DECK_POC_CWD;
 if (!cwd) {
   throw new Error("Set CODEX_DECK_POC_CWD to an absolute disposable workspace path.");
 }
+const scenario = process.env.CODEX_DECK_POC_SCENARIO ?? "basic";
+if (!new Set(["basic", "approval", "control"]).has(scenario)) {
+  throw new Error("CODEX_DECK_POC_SCENARIO must be basic, approval, or control.");
+}
 
 const server = spawn("codex", ["app-server", "--stdio"], {
   stdio: ["pipe", "pipe", "pipe"],
@@ -14,6 +18,7 @@ const server = spawn("codex", ["app-server", "--stdio"], {
 const startedAt = new Date().toISOString();
 const pending = new Map();
 const notifications = [];
+const serverRequests = [];
 const stderr = [];
 let nextId = 1;
 
@@ -47,6 +52,11 @@ createInterface({ input: server.stdout }).on("line", (line) => {
     else entry.resolve(message.result);
     return;
   }
+  if (Object.hasOwn(message, "id") && message.method?.endsWith("/requestApproval")) {
+    serverRequests.push(message.method);
+    write({ id: message.id, result: { decision: "decline" } });
+    return;
+  }
   if (message.method) notifications.push({ method: message.method, params: message.params ?? null });
 });
 createInterface({ input: server.stderr }).on("line", (line) => stderr.push(line));
@@ -61,13 +71,38 @@ try {
   const started = await request("thread/start", {
     approvalPolicy: "untrusted",
     cwd,
-    sandbox: "read-only",
+    sandbox: scenario === "approval" ? "workspace-write" : "read-only",
   });
   const threadId = started.thread.id;
   const turn = await request("turn/start", {
     threadId,
-    input: [{ type: "text", text: "Reply with exactly: P0-1 OK. Do not run commands or modify files." }],
+    input: [{
+      type: "text",
+      text: scenario === "approval"
+        ? "Create a file named approval_probe.txt containing exactly APPROVED."
+        : "Explain the numbers from 1 through 1000 one at a time. Do not run commands or modify files.",
+    }],
   });
+  let steerOutcome = null;
+  let interruptOutcome = null;
+  if (scenario === "control") {
+    try {
+      await request("turn/steer", {
+        threadId,
+        expectedTurnId: turn.turn.id,
+        input: [{ type: "text", text: "Stop the enumeration and summarize in one sentence." }],
+      });
+      steerOutcome = "accepted";
+    } catch (error) {
+      steerOutcome = error.message.includes("no active turn") ? "rejected-no-active-turn" : "rejected";
+    }
+    try {
+      await request("turn/interrupt", { threadId, turnId: turn.turn.id });
+      interruptOutcome = "accepted";
+    } catch (error) {
+      interruptOutcome = error.message.includes("no active turn") ? "rejected-no-active-turn" : "rejected";
+    }
+  }
   await waitFor("turn/completed");
   const read = await request("thread/read", { threadId });
   const resumed = await request("thread/resume", { threadId });
@@ -80,6 +115,10 @@ try {
     turnIdHash: redactId(turn.turn.id),
     threadRead: Boolean(read.thread),
     threadResume: Boolean(resumed.thread),
+    scenario,
+    serverRequestMethods: serverRequests,
+    steerOutcome,
+    interruptOutcome,
     notificationMethods: itemMethods,
     stderrLineCount: stderr.length,
   }, null, 2));
