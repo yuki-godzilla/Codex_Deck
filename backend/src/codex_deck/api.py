@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+import asyncio
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, Field
 
 from .bridge import StartWorkRequest
@@ -102,4 +103,43 @@ def create_app(service: DeckService) -> FastAPI:
     ) -> list[DeckEventBody]:
         return [_event_body(event) for event in service.events_after(after, workspace_id=workspace_id, limit=limit)]
 
+    @app.websocket("/api/v1/events/stream")
+    async def stream_events(websocket: WebSocket) -> None:
+        after = _non_negative_query(websocket.query_params.get("after"), "after")
+        workspace_id = websocket.query_params.get("workspace_id")
+        await websocket.accept()
+        loop = asyncio.get_running_loop()
+        pending: asyncio.Queue[DeckEvent] = asyncio.Queue()
+
+        def on_event(event: DeckEvent) -> None:
+            if workspace_id is None or event.workspace_id == workspace_id:
+                loop.call_soon_threadsafe(pending.put_nowait, event)
+
+        unsubscribe = service.subscribe_events(on_event)
+        try:
+            last_sent = after
+            for event in service.events_after(after, workspace_id=workspace_id, limit=200):
+                await websocket.send_json(_event_body(event).model_dump(mode="json"))
+                last_sent = event.event_id
+            while True:
+                event = await pending.get()
+                if event.event_id <= last_sent:
+                    continue
+                await websocket.send_json(_event_body(event).model_dump(mode="json"))
+                last_sent = event.event_id
+        except WebSocketDisconnect:
+            pass
+        finally:
+            unsubscribe()
+
     return app
+
+
+def _non_negative_query(value: str | None, field: str) -> int:
+    try:
+        parsed = int(value or "0")
+    except ValueError as error:
+        raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION) from error
+    if parsed < 0:
+        raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
+    return parsed

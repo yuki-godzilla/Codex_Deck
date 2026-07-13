@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from .bridge import Bridge, StartWorkRequest
-from .events import DeckEvent, EventStore
+from .events import DeckEvent, EventRepository, EventSubscriber, Unsubscribe
 from .scheduler import ActiveWork, Scheduler
 
 
 class DeckService:
-    def __init__(self, *, bridge: Bridge, scheduler: Scheduler, events: EventStore) -> None:
+    def __init__(self, *, bridge: Bridge, scheduler: Scheduler, events: EventRepository) -> None:
         self._bridge = bridge
         self._scheduler = scheduler
         self._events = events
@@ -29,3 +29,6 @@ class DeckService:
 
     def events_after(self, event_id: int, *, workspace_id: str | None, limit: int) -> list[DeckEvent]:
         return self._events.after(event_id, workspace_id=workspace_id, limit=limit)
+
+    def subscribe_events(self, subscriber: EventSubscriber) -> Unsubscribe:
+        return self._events.subscribe(subscriber)

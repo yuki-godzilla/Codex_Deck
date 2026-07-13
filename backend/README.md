@@ -5,8 +5,8 @@
 - `Scheduler`: `1 workspace = 1 Active work`の論理排他
 - `Bridge`: App ServerのThread/Turn開始契約
 - `StdioJsonRpcTransport`: `codex app-server --stdio`だけを起動するJSON-RPC transport
-- `EventStore`: browser再接続用のDeck event ID。Codex本文の正本は保存しない
-- `create_app`: workspaceのActive workとイベントreplayを返すFastAPI
+- `EventStore` / `SqliteEventStore`: browser再接続用のDeck event ID。Codex本文の正本は保存しない
+- `create_app`: workspaceのActive work、HTTP replay、WebSocketのイベント配信を提供するFastAPI
 
 ## 開発用セットアップ
 
@@ -26,5 +26,8 @@ python -m unittest discover -s backend\tests -v
 | `GET` | `/api/v1/workspaces/{workspace_id}/active-work` | workspaceのActive work取得 |
 | `POST` | `/api/v1/workspaces/{workspace_id}/work` | Thread/Turn開始。競合時は`409 workspace_busy` |
 | `GET` | `/api/v1/events?after={event_id}` | event ID以降の再接続用replay |
+| `WS` | `/api/v1/events/stream?after={event_id}` | replay後のリアルタイムイベント配信 |
 
-実 App Server接続、SQLite永続化、認証、WebSocket、承認応答、ブラウザUIは次の実装単位で追加する。`POST /work`へ渡された依頼本文は、Deck event payloadには複製しない。
+WebSocketは先に購読を登録してからreplayを送るため、その間に受信したイベントを取りこぼさない。重複イベントはDeck event IDでクライアントが排除する。`POST /work`へ渡された依頼本文は、Deck event payloadには複製しない。
+
+SQLiteのファイルパス、起動時の`SqliteEventStore`構成、認証、承認応答、ブラウザUIは次の実装単位で追加する。
