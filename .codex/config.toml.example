@@ -1,0 +1,27 @@
+# Codex project configuration example for developing Codex Deck.
+# Keep personal settings, credentials, notify commands, MCP launch commands,
+# and machine-specific Windows settings in ~/.codex/config.toml.
+
+# Select a model available in the local Codex environment.
+# model = "your-available-model"
+
+model_reasoning_effort = "medium"
+
+# Keep interactive approval enabled by default.
+approval_policy = "on-request"
+approvals_reviewer = "user"
+
+# Keep normal project work inside the workspace by default.
+sandbox_mode = "workspace-write"
+default_permissions = ":workspace"
+
+# Enable external search only when the active task requires it.
+web_search = "disabled"
+
+# Do not add to this file:
+# - notify commands and executable paths
+# - [projects.*] trust entries
+# - Windows user-specific sandbox paths or settings
+# - MCP commands, arguments, environments, or OAuth credentials
+# - plugin/marketplace cache paths
+# - API keys, tokens, or other secrets
