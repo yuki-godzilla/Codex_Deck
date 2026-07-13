@@ -9,8 +9,10 @@ from .app_server import AppServerStdioClient, StdioJsonRpcTransport
 from .api import create_app
 from .bridge import Bridge, StartWorkRequest
 from .events import DeckEvent, EventStore, SqliteEventStore
+from .files import ReadOnlyFileService
 from .scheduler import ActiveWork, Scheduler, WorkspaceBusyError, WorkState
 from .service import DeckService
+from .workspaces import WorkspaceStore
 
 __all__ = [
     "ActiveWork",
@@ -20,10 +22,12 @@ __all__ = [
     "DeckEvent",
     "DeckService",
     "EventStore",
+    "ReadOnlyFileService",
     "Scheduler",
     "StartWorkRequest",
     "StdioJsonRpcTransport",
     "SqliteEventStore",
+    "WorkspaceStore",
     "WorkState",
     "WorkspaceBusyError",
 ]

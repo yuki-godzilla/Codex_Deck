@@ -11,8 +11,10 @@ from pydantic import BaseModel, Field
 
 from .bridge import StartWorkRequest
 from .events import DeckEvent
+from .files import FileAccessError, FileEntry, ReadOnlyFileService, TextFile
 from .scheduler import ActiveWork, WorkspaceBusyError
 from .service import DeckService
+from .workspaces import Workspace, WorkspaceStore
 
 
 class StartWorkBody(BaseModel):
@@ -40,6 +42,26 @@ class DeckEventBody(BaseModel):
     payload: dict[str, Any]
 
 
+class WorkspaceBody(BaseModel):
+    workspace_id: str
+    display_name: str
+    created_at: datetime
+
+
+class FileEntryBody(BaseModel):
+    path: str
+    name: str
+    kind: str
+    size_bytes: int | None
+
+
+class TextFileBody(BaseModel):
+    path: str
+    content: str
+    size_bytes: int
+    line_count: int
+
+
 def _work_body(work: ActiveWork) -> ActiveWorkBody:
     return ActiveWorkBody(
         work_id=work.work_id,
@@ -62,12 +84,65 @@ def _event_body(event: DeckEvent) -> DeckEventBody:
     )
 
 
-def create_app(service: DeckService) -> FastAPI:
+def _workspace_body(workspace: Workspace) -> WorkspaceBody:
+    return WorkspaceBody(
+        workspace_id=workspace.workspace_id,
+        display_name=workspace.display_name,
+        created_at=workspace.created_at,
+    )
+
+
+def _file_entry_body(entry: FileEntry) -> FileEntryBody:
+    return FileEntryBody(path=entry.path, name=entry.name, kind=entry.kind, size_bytes=entry.size_bytes)
+
+
+def _text_file_body(file: TextFile) -> TextFileBody:
+    return TextFileBody(path=file.path, content=file.content, size_bytes=file.size_bytes, line_count=file.line_count)
+
+
+def create_app(
+    service: DeckService,
+    *,
+    workspaces: WorkspaceStore | None = None,
+    files: ReadOnlyFileService | None = None,
+) -> FastAPI:
     app = FastAPI(title="Codex Deck API", version="0.1.0")
 
     @app.get("/healthz")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/api/v1/workspaces", response_model=list[WorkspaceBody])
+    def list_workspaces() -> list[WorkspaceBody]:
+        if workspaces is None:
+            return []
+        return [_workspace_body(workspace) for workspace in workspaces.list()]
+
+    @app.get("/api/v1/workspaces/{workspace_id}/files", response_model=list[FileEntryBody])
+    def list_files(workspace_id: str, path: str = "") -> list[FileEntryBody]:
+        if files is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="file adapter is not configured")
+        try:
+            return [_file_entry_body(entry) for entry in files.list_directory(workspace_id, path)]
+        except KeyError as error:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="workspace not found") from error
+        except FileAccessError as error:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="file access denied") from error
+        except ValueError as error:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from error
+
+    @app.get("/api/v1/workspaces/{workspace_id}/file", response_model=TextFileBody)
+    def read_file(workspace_id: str, path: str = Query(min_length=1)) -> TextFileBody:
+        if files is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="file adapter is not configured")
+        try:
+            return _text_file_body(files.read_text(workspace_id, path))
+        except KeyError as error:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="workspace not found") from error
+        except FileAccessError as error:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="file access denied") from error
+        except ValueError as error:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from error
 
     @app.get("/api/v1/workspaces/{workspace_id}/active-work", response_model=ActiveWorkBody | None)
     def get_active_work(workspace_id: str) -> ActiveWorkBody | None:

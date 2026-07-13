@@ -16,7 +16,7 @@
 | プロジェクト | Codex Deck |
 | 主目的 | Windows PC上のCodexを、スマートフォン、タブレット、PCブラウザから遠隔操作・監視・レビューするモバイルファーストWebクライアントを作る。 |
 | 現在フェーズ | P0の互換性PoCとMVP実装基盤の整備。 |
-| 実装状況 | PoC harness、Scheduler/Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、React UI縦スライスを実装済み。UI実画面検証、SQLite起動時構成、実 App Server結合test、認証、実行設定は未完了。 |
+| 実装状況 | PoC harness、Scheduler/Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、許可root内workspace/File Adapter、React UI縦スライスを実装済み。UI実画面検証、実 App Server結合test、認証、実行設定は未完了。 |
 | 正本 | CodexのThread、Turn、Item、approval policy、sandbox設定。Deck DBは補助情報のみ。 |
 | 主要端末 | iPhone、iPad、PCブラウザ。PCの単純縮小版ではない。 |
 
@@ -76,7 +76,7 @@
 ## 7. 次に進める作業
 
 1. **UI検証** — ブラウザ連携を復旧し、代表viewportでworkspace/Thread/Turn縦スライスの実画面・操作を確認する。完了まで次のUI単位へ進まない。
-2. **MVP基盤** — SQLiteの起動時構成、App Server adapterの実機結合test、承認イベントと安全な応答を追加する。
+2. **MVP基盤** — App Server adapterの実機結合test、承認イベントと安全な応答、Git/diff read adapterを追加する。
 3. **P0: PoC-2残件** — VS Code共有、同一Thread/承認競合、変更を伴うworkspace別並行を検証する。
 4. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
 
@@ -102,3 +102,4 @@
 - 2026-07-14: FastAPIでActive workとevent replayの最小HTTP APIを追加。Deck eventは補助状態であり、依頼本文をpayloadへ複製しない。SQLite、認証、WebSocketは未実装。
 - 2026-07-14: SQLite event storeとWebSocket event配信を追加。WebSocketはreplay前に購読し、受信済みevent IDで重複を排除する。DB起動構成、認証、承認応答は未実装。
 - 2026-07-14: React/Viteで最初のworkspace/Active work/event表示UIを実装。ビルドとデモBackend連携は確認したが、ブラウザ連携の実行モジュール不在で実画面検証は保留。
+- 2026-07-14: 許可root内の起動時明示workspace登録と、秘密情報・越境を拒否する読み取り専用File Adapterを追加。認証前にBrowserから任意pathを登録するAPIは提供しない。

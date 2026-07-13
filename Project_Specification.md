@@ -99,7 +99,9 @@ Codex_Deck/
 │   │   ├── api.py
 │   │   ├── bridge.py
 │   │   ├── events.py
-│   │   └── scheduler.py
+│   │   ├── files.py
+│   │   ├── scheduler.py
+│   │   └── workspaces.py
 │   └── tests/
 ├── frontend/
 │   ├── src/
@@ -115,7 +117,7 @@ Codex_Deck/
     └── research/
 ```
 
-`backend/`には、App Serverのstdio JSON-RPC transport、Bridge契約、workspace排他Scheduler、SQLite対応Deck event store、FastAPI HTTP/WebSocket API、およびfake App Serverによるunit testを配置した。`frontend/`には、workspace/Active work/eventを表示し依頼開始を行うReact UI縦スライスを配置した。SQLiteファイルの本番起動構成、実 App Serverを使う結合test、認証、PWA、起動設定は未作成である。
+`backend/`には、App Serverのstdio JSON-RPC transport、Bridge契約、workspace排他Scheduler、SQLite対応Deck event store、許可root内のworkspace catalog、読み取り専用File Adapter、FastAPI HTTP/WebSocket API、およびfake App Serverによるunit testを配置した。`frontend/`には、workspace/Active work/eventを表示し依頼開始を行うReact UI縦スライスを配置した。SQLiteファイルの本番起動構成、実 App Serverを使う結合test、認証、PWA、起動設定は未作成である。
 
 ### 6.2 実装開始後の責務境界
 
@@ -125,7 +127,7 @@ Codex_Deck/
 | Backend API | Deck API、認証、WebSocket、通知、UI補助状態 | Active work、event replay、WebSocket配信を実装。SQLite event storeは実装済みだが、起動時のDB構成、認証、通知は未実装。Codex Thread正本やユーザーtokenをDBへ複製しない。 |
 | Bridge | App Server stdio、JSON-RPC、event順序、再同期、mask、process監視 | stdio start/initialize/thread-start/turn-startの最小adapterを実装。実 App Server結合test、event永続化、再同期、maskは未実装。 |
 | Scheduler | workspace lock、Active work、停止/中断、再起動時の状態遷移 | 前回Turnの自動再実行を禁止する。 |
-| File/Git Adapter | 許可root配下の読み取り、Git状態/diff、deny/mask | 直接編集・自由なOS探索を提供しない。 |
+| File/Git Adapter | 許可root配下の読み取り、Git状態/diff、deny/mask | workspaceを起動時ローカル引数で明示登録し、UTF-8 textの一覧/読取のみ実装。Git状態/diffは未実装。直接編集・自由なOS探索を提供しない。 |
 | Notification Adapter | in-app/PWA/ntfyの配送・既読・quiet hours | SMAIのコード、DB、設定、topicと共有しない。 |
 
 ## 7. 外部インターフェース
@@ -161,6 +163,7 @@ Codex_Deck/
 | 2026-07-14 | HTTP API / event replay | FastAPI、fake App Server | health、work開始、workspace競合の`409`、event IDによるreplay、依頼本文をevent payloadに複製しないことを3 unit testで確認。 |
 | 2026-07-14 | SQLite / WebSocket event配信 | SQLite、FastAPI TestClient | SQLite再open後のevent replay、WebSocketのreplayとリアルタイム配信を3 unit testで確認。 |
 | 2026-07-14 | UI縦スライス | React/Vite、明示的なfake App Server | production build、ローカルHTTP配信、デモThread/Turn/event生成を確認。ブラウザ連携不備により実画面のviewport/操作確認は保留。 |
+| 2026-07-14 | workspace / File Adapter | SQLite、temporary filesystem | 許可root外の登録拒否、秘密情報のdeny、親ディレクトリ越境拒否、binary拒否、Browser APIが絶対pathを返さないことをunit testで確認。 |
 
 ### 8.3 未確認範囲
 
@@ -177,6 +180,7 @@ Codex_Deck/
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を本プロジェクトへ導入済み。 |
 | App Server PoC | 条件付確認済み | P0-0/1を確認し、P0-2ではread-onlyのworkspace A/B並行と同一workspace二重起動を確認。共有・競合・変更を伴う並行は残件。 |
 | Backend基盤 / API | 実装中 | Scheduler、Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、fake transport unit testを実装。 |
+| Workspace / File Adapter | 実装中 | 許可root内の明示登録、絶対path非公開、読み取り専用一覧/UTF-8プレビュー、secret/外部symlink denyを実装。Git/diffは未実装。 |
 | Web UI | 検証保留 | 最初のレスポンシブ縦スライスを実装。実ブラウザの操作・目視確認が未実施のため、完了扱いにしない。 |
 | 運用構成 | 未着手 | SQLiteファイルの本番起動時構成、実 App Server結合test、認証、PWA、設定を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |
