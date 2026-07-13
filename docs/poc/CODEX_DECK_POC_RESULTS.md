@@ -43,7 +43,8 @@
 | file approval | `item/fileChange/requestApproval`を受信し、公式`decline`応答後に使い捨てworkspaceが未変更であることを確認 | 合格 |
 | command approval | `item/commandExecution/requestApproval`を受信し、公式`decline`応答で解決 | 合格 |
 | `turn/steer` / `turn/interrupt` | 完了済みTurnでは双方とも`no active turn`で拒否。`turn/started`通知から実行中Turn IDを取得して送った場合は双方が受理 | 合格 |
-| App Server強制終了 | 実行中Turn開始後に`SIGTERM`で終了。検証クライアントは`turn/start`を1回だけ送信し、再送・二重Turnを発生させなかった | 条件付合格。再起動後のThread再読取は未確認。 |
+| App Server強制終了 | 実行中Turn開始後に`SIGTERM`で終了。検証クライアントは`turn/start`を1回だけ送信し、再送・二重Turnを発生させなかった | 条件付合格。 |
+| App Server再起動後の読取 | 新しいstdio接続で同じ使い捨てworkspaceの既存Thread一覧を取得し、`thread/read`と`thread/resume`を再確認。前回Turnの自動再実行は行わなかった | 条件付合格。強制終了した特定Turnの実行中状態を公式に復帰できるかは未確認。 |
 
 Thread IDとTurn IDは保存せず、それぞれのハッシュ先頭12文字だけを検証時に確認した。App Server stderrは2行出力されたが、内容は証跡へ保存していない。
 
@@ -55,7 +56,7 @@ P0-1で同一App Server接続内の`thread/resume`は成功した。一方、CLI
 
 ## 6. 次の実施順
 
-1. App Server再起動後の保存済みThread再読取と、実行中Turnを「中断」として扱うことを観測する。
+1. CLI起点およびVS Code起点のThreadをApp Serverから読めるかを確認する。
 2. CLI起点およびVS Code起点のThreadをApp Serverから読めるかを確認する。
 3. 同一Threadの閲覧・追加指示・停止・承認の競合を、先後関係を変えて3回ずつ確認する。
 4. workspace A/Bの同時Turnと、同一workspaceの二重開始抑止を確認する。
