@@ -16,7 +16,7 @@
 | プロジェクト | Codex Deck |
 | 主目的 | Windows PC上のCodexを、スマートフォン、タブレット、PCブラウザから遠隔操作・監視・レビューするモバイルファーストWebクライアントを作る。 |
 | 現在フェーズ | P0の互換性PoCとMVP実装基盤の整備。 |
-| 実装状況 | PoC harnessと、framework非依存のScheduler/Bridge開始契約を実装済み。Web UI、API、DB、実 App Server adapter、依存関係、実行設定は未作成。 |
+| 実装状況 | PoC harness、framework非依存のScheduler/Bridge開始契約、App Server stdio adapterを実装済み。Web UI、API、DB、実 App Server結合test、依存関係、実行設定は未作成。 |
 | 正本 | CodexのThread、Turn、Item、approval policy、sandbox設定。Deck DBは補助情報のみ。 |
 | 主要端末 | iPhone、iPad、PCブラウザ。PCの単純縮小版ではない。 |
 
@@ -75,7 +75,7 @@
 
 ## 7. 次に進める作業
 
-1. **MVP基盤** — stdio App Server adapter、Deck event store、FastAPI APIを、fake App Serverを使う決定的テストとともに追加する。
+1. **MVP基盤** — Deck event store、FastAPI APIを、fake App Serverを使う決定的テストとともに追加する。App Server adapterは実機結合testを追加する。
 2. **P0: PoC-2残件** — VS Code共有、同一Thread/承認競合、変更を伴うworkspace別並行を検証する。
 3. **最初のUI縦スライス** — workspace/Thread/Turnの最小画面を実装し、代表viewportで実画面検証する。
 4. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
@@ -98,3 +98,4 @@
 - 2026-07-14: P0-0を完了し、P0-1のstdio基本経路を確認。詳細は`docs/poc/CODEX_DECK_POC_RESULTS.md`を参照。
 - 2026-07-14: P0-2でread-only Turnのworkspace A/B並行と同一workspace二重起動を確認。Deck Schedulerによるworkspace論理排他を必須とした。
 - 2026-07-14: Backend基盤として、workspace lockとfake App Server経由のBridge開始契約を実装。実 App Server adapter、API、DBは未実装。
+- 2026-07-14: `codex app-server --stdio`専用のJSON-RPC adapterを追加。承認の自動応答、WebSocket公開、実 App Server結合testは未実装。

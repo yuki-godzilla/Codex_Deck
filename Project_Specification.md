@@ -95,6 +95,7 @@ Codex_Deck/
 ├── backend/
 │   ├── pyproject.toml
 │   ├── src/codex_deck/
+│   │   ├── app_server.py
 │   │   ├── bridge.py
 │   │   └── scheduler.py
 │   └── tests/
@@ -109,7 +110,7 @@ Codex_Deck/
     └── research/
 ```
 
-`backend/`には、実 App Server を呼ばないBridge契約、workspace排他Scheduler、およびfake App Serverによるunit testを配置した。`frontend/`、FastAPI配信、SQLite、実 App Server stdio adapter、依存関係、実行スクリプトは未作成である。
+`backend/`には、App Serverのstdio JSON-RPC transport、Bridge契約、workspace排他Scheduler、およびfake App Serverによるunit testを配置した。`frontend/`、FastAPI配信、SQLite、実 App Serverを使う結合test、依存関係、実行スクリプトは未作成である。
 
 ### 6.2 実装開始後の責務境界
 
@@ -117,7 +118,7 @@ Codex_Deck/
 | --- | --- | --- |
 | Frontend | 端末別レイアウト、composer、作業表示、読み取り専用ビュー | Codex/App Serverへ直接接続しない。 |
 | Backend API | Deck API、認証、WebSocket、通知、UI補助状態 | Codex Thread正本やユーザーtokenをDBへ複製しない。 |
-| Bridge | App Server stdio、JSON-RPC、event順序、再同期、mask、process監視 | 実装する公式APIを対象バージョンschemaに合わせる。 |
+| Bridge | App Server stdio、JSON-RPC、event順序、再同期、mask、process監視 | stdio start/initialize/thread-start/turn-startの最小adapterを実装。実 App Server結合test、event永続化、再同期、maskは未実装。 |
 | Scheduler | workspace lock、Active work、停止/中断、再起動時の状態遷移 | 前回Turnの自動再実行を禁止する。 |
 | File/Git Adapter | 許可root配下の読み取り、Git状態/diff、deny/mask | 直接編集・自由なOS探索を提供しない。 |
 | Notification Adapter | in-app/PWA/ntfyの配送・既読・quiet hours | SMAIのコード、DB、設定、topicと共有しない。 |
@@ -151,6 +152,7 @@ Codex_Deck/
 | 2026-07-14 | P0-0とP0-1基本経路 | Windows、`codex-cli 0.144.1` | schema生成、stdio handshake、Thread/Turn/Item/完了/resumeを確認。詳細は`docs/poc/CODEX_DECK_POC_RESULTS.md`。 |
 | 2026-07-14 | P0-2のread-only並行 | Windows、`codex-cli 0.144.1` | workspace A/Bと同一workspaceの同時Turnは別Thread/Turnとして完了。Deckのworkspace lockは必須。 |
 | 2026-07-14 | Scheduler/Bridge基盤 | Python 3.12標準ライブラリ、fake App Server | 同一workspace開始拒否、別workspace並行、開始失敗時lock解放を5 unit testで確認。 |
+| 2026-07-14 | App Server stdio adapter | Python 3.12標準ライブラリ、fake JSON-RPC transport | `initialize`/`initialized`、`thread/start`、`turn/start`の順序と接続前拒否を2 unit testで確認。実 App Server結合testは未実施。 |
 
 ### 8.3 未確認範囲
 
@@ -166,8 +168,8 @@ Codex_Deck/
 | 要件定義 | 確認済み | 要件、ユースケース、画面設計、PoC、リスク、公式調査を作成済み。 |
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を本プロジェクトへ導入済み。 |
 | App Server PoC | 条件付確認済み | P0-0/1を確認し、P0-2ではread-onlyのworkspace A/B並行と同一workspace二重起動を確認。共有・競合・変更を伴う並行は残件。 |
-| Backend基盤 | 実装中 | framework非依存のSchedulerとBridge開始契約、fake App Server unit testを実装。 |
-| Web UI / API / DB | 未着手 | frontend、FastAPI配信、SQLite、実 App Server adapter、設定、依存関係を未作成。 |
+| Backend基盤 | 実装中 | framework非依存のScheduler、Bridge開始契約、App Server stdio adapter、fake transport unit testを実装。 |
+| Web UI / API / DB | 未着手 | frontend、FastAPI配信、SQLite、実 App Server結合test、設定、依存関係を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |
 
 ## 10. 関連資料・参考URL
