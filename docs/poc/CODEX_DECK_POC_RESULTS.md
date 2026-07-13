@@ -39,10 +39,10 @@
 | handshake | `initialize`後に`initialized`を送信し、Windows platformとuser agentを受信 | 合格 |
 | Thread操作 | `thread/list`、`thread/start`、`thread/read`、`thread/resume`が成功 | 合格 |
 | Turnと通知 | `turn/start`後に`item/started`、`item/agentMessage/delta`、`item/completed`、`turn/completed`を受信 | 合格 |
-| unknown Item | この実行では未観測 | 未判定 |
+| 非コア通知の保持 | `remoteControl/status/changed`などの未構造化通知を記録してもハーネスが停止しないことを確認 | 条件付合格。未知Item本文の表示方針はBridge実装時に検証する。 |
 | file approval | `item/fileChange/requestApproval`を受信し、公式`decline`応答後に使い捨てworkspaceが未変更であることを確認 | 合格 |
-| command approval | 未実行 | 未判定 |
-| `turn/steer` / `turn/interrupt` | 短時間で完了したTurnでは双方とも`no active turn`で拒否。拒否をJSON-RPC errorとして取得 | 条件付合格。実行中Turnでの受理は未確認。 |
+| command approval | `item/commandExecution/requestApproval`を受信し、公式`decline`応答で解決 | 合格 |
+| `turn/steer` / `turn/interrupt` | 完了済みTurnでは双方とも`no active turn`で拒否。`turn/started`通知から実行中Turn IDを取得して送った場合は双方が受理 | 合格 |
 | App Server障害・再起動 | 未実行 | 未判定 |
 
 Thread IDとTurn IDは保存せず、それぞれのハッシュ先頭12文字だけを検証時に確認した。App Server stderrは2行出力されたが、内容は証跡へ保存していない。
@@ -55,7 +55,7 @@ P0-1で同一App Server接続内の`thread/resume`は成功した。一方、CLI
 
 ## 6. 次の実施順
 
-1. 実行中Turnでの`turn/steer`、`turn/interrupt`、command approval、unknown Item、App Server終了を使い捨てworkspaceで観測する。
+1. App Server終了時のexit code、未完了request、二重送信防止、保存済みThreadの可視性を使い捨てworkspaceで観測する。
 2. CLI起点およびVS Code起点のThreadをApp Serverから読めるかを確認する。
 3. 同一Threadの閲覧・追加指示・停止・承認の競合を、先後関係を変えて3回ずつ確認する。
 4. workspace A/Bの同時Turnと、同一workspaceの二重開始抑止を確認する。

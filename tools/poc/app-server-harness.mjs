@@ -7,8 +7,8 @@ if (!cwd) {
   throw new Error("Set CODEX_DECK_POC_CWD to an absolute disposable workspace path.");
 }
 const scenario = process.env.CODEX_DECK_POC_SCENARIO ?? "basic";
-if (!new Set(["basic", "approval", "control"]).has(scenario)) {
-  throw new Error("CODEX_DECK_POC_SCENARIO must be basic, approval, or control.");
+if (!new Set(["basic", "approval", "command-approval", "control", "active-control"]).has(scenario)) {
+  throw new Error("CODEX_DECK_POC_SCENARIO must be basic, approval, command-approval, control, or active-control.");
 }
 
 const server = spawn("codex", ["app-server", "--stdio"], {
@@ -29,10 +29,10 @@ const request = (method, params) => new Promise((resolve, reject) => {
   pending.set(id, { method, reject, resolve });
   write({ id, method, params });
 });
-const waitFor = (method, timeoutMs = 120_000) => new Promise((resolve, reject) => {
+const waitFor = (method, timeoutMs = 120_000, predicate = () => true) => new Promise((resolve, reject) => {
   const deadline = setTimeout(() => reject(new Error(`Timed out waiting for ${method}`)), timeoutMs);
   const poll = () => {
-    const match = notifications.find((entry) => entry.method === method);
+    const match = notifications.find((entry) => entry.method === method && predicate(entry));
     if (match) {
       clearTimeout(deadline);
       resolve(match);
@@ -69,27 +69,28 @@ try {
   write({ method: "initialized", params: {} });
   const before = await request("thread/list", { cwd, limit: 10, useStateDbOnly: true });
   const started = await request("thread/start", {
-    approvalPolicy: "untrusted",
+    approvalPolicy: scenario === "active-control" ? "never" : "untrusted",
     cwd,
-    sandbox: scenario === "approval" ? "workspace-write" : "read-only",
+    sandbox: ["approval", "command-approval", "active-control"].includes(scenario) ? "workspace-write" : "read-only",
   });
   const threadId = started.thread.id;
-  const turn = await request("turn/start", {
+  const turnPromise = request("turn/start", {
     threadId,
     input: [{
       type: "text",
-      text: scenario === "approval"
-        ? "Create a file named approval_probe.txt containing exactly APPROVED."
-        : "Explain the numbers from 1 through 1000 one at a time. Do not run commands or modify files.",
+      text: scenario === "approval" ? "Create a file named approval_probe.txt containing exactly APPROVED."
+        : scenario === "command-approval" ? "Run the command Get-Date, then reply with its year only."
+          : scenario === "active-control" ? "Run exactly Start-Sleep -Seconds 20, then reply with SLEEP DONE."
+            : "Explain the numbers from 1 through 1000 one at a time. Do not run commands or modify files.",
     }],
   });
   let steerOutcome = null;
   let interruptOutcome = null;
-  if (scenario === "control") {
+  const sendControl = async (turnId) => {
     try {
       await request("turn/steer", {
         threadId,
-        expectedTurnId: turn.turn.id,
+        expectedTurnId: turnId,
         input: [{ type: "text", text: "Stop the enumeration and summarize in one sentence." }],
       });
       steerOutcome = "accepted";
@@ -97,11 +98,19 @@ try {
       steerOutcome = error.message.includes("no active turn") ? "rejected-no-active-turn" : "rejected";
     }
     try {
-      await request("turn/interrupt", { threadId, turnId: turn.turn.id });
+      await request("turn/interrupt", { threadId, turnId });
       interruptOutcome = "accepted";
     } catch (error) {
       interruptOutcome = error.message.includes("no active turn") ? "rejected-no-active-turn" : "rejected";
     }
+  };
+  if (scenario === "active-control") {
+    const startedNotification = await waitFor("turn/started", 30_000, (entry) => entry.params?.threadId === threadId);
+    await sendControl(startedNotification.params.turn.id);
+  }
+  const turn = await turnPromise;
+  if (scenario === "control") {
+    await sendControl(turn.turn.id);
   }
   await waitFor("turn/completed");
   const read = await request("thread/read", { threadId });

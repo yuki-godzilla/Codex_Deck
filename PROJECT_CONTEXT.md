@@ -50,7 +50,7 @@
 | 要件定義 | 確認済み | メイン要件、ユースケース、画面設計、PoC、リスクを作成済み。 |
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を導入。 |
 | PoC-0 | 確認済み | `codex-cli 0.144.1`からTypeScript/JSON Schemaを生成し、tree hashを記録した。 |
-| PoC-1 | 一部確認済み | stdio handshake、Thread操作、read-only Turn、主要Item、完了、resume、file approvalの`decline`を確認。command approval、実行中Turnのsteer/interrupt、障害は未確認。 |
+| PoC-1 | 一部確認済み | stdio handshake、Thread操作、主要Item、完了、resume、file/command approvalの`decline`、実行中Turnのsteer/interrupt受理を確認。App Server障害は未確認。 |
 | PoC-2 | 未判定 | 同一接続内のresumeのみ確認。CLI/VS Code共有、競合、workspace別並行は未検証。 |
 | アプリ実装 | 未着手 | ユーザーのレビューとPoCゲート完了を待つ。 |
 
@@ -75,7 +75,7 @@
 
 ## 7. 次に進める作業
 
-1. **P0: PoC-1継続** — command approval、実行中Turnの`turn/steer`・`turn/interrupt`、unknown Item、App Server障害を観測する。
+1. **P0: PoC-1継続** — App Server障害時のexit code、未完了request、二重送信防止、保存済みThread可視性を観測する。
 2. **P0: PoC-2** — CLI、VS Code、App Server間のThread共有、同時操作、workspace別並行実行を検証する。
 4. **レビュー** — PoC結果を要件定義、画面文言、リスク一覧へ反映し、MVP実装可否を決定する。
 5. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
