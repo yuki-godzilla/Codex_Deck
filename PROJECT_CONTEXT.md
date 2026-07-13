@@ -15,8 +15,8 @@
 | --- | --- |
 | プロジェクト | Codex Deck |
 | 主目的 | Windows PC上のCodexを、スマートフォン、タブレット、PCブラウザから遠隔操作・監視・レビューするモバイルファーストWebクライアントを作る。 |
-| 現在フェーズ | 実装前の要件定義、公式仕様調査、PoC計画、AI文書体系の整備。 |
-| 実装状況 | アプリ本体、フレームワーク、依存関係、実行設定は未作成。 |
+| 現在フェーズ | P0の互換性PoCとMVP実装基盤の整備。 |
+| 実装状況 | PoC harnessを実装済み。アプリ本体、フレームワーク、依存関係、実行設定は未作成。 |
 | 正本 | CodexのThread、Turn、Item、approval policy、sandbox設定。Deck DBは補助情報のみ。 |
 | 主要端末 | iPhone、iPad、PCブラウザ。PCの単純縮小版ではない。 |
 
@@ -51,8 +51,8 @@
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を導入。 |
 | PoC-0 | 確認済み | `codex-cli 0.144.1`からTypeScript/JSON Schemaを生成し、tree hashを記録した。 |
 | PoC-1 | 条件付確認済み | stdio handshake、Thread操作、主要Item、完了、resume、file/command approvalの`decline`、実行中Turnのsteer/interrupt受理、強制終了後の再送なし、再起動後の保存Thread読取を確認。実行中Turnの公式復帰は未確認で、中断扱いとする。 |
-| PoC-2 | 一部確認済み | CLI起点ThreadはID指定の`thread/read`で読めたが、同cwdの`thread/list`では検出できなかった。VS Code共有、競合、workspace別並行は未検証。 |
-| アプリ実装 | 未着手 | ユーザーのレビューとPoCゲート完了を待つ。 |
+| PoC-2 | 条件付確認済み | CLI起点ThreadはID指定の`thread/read`で読めたが、同cwdの`thread/list`では検出できなかった。read-only Turnはworkspace A/Bおよび同一workspaceで同時に完了した。VS Code共有、同一Thread/承認競合、変更を伴う並行は未検証。 |
+| アプリ実装 | 着手準備 | ユーザーの明示依頼により、PoC結果を越える互換性を前提にしないBridge/Scheduler基盤から開始する。 |
 
 ## 5. 未決事項
 
@@ -75,9 +75,10 @@
 
 ## 7. 次に進める作業
 
-1. **P0: PoC-2** — CLI、VS Code、App Server間のThread共有、同時操作、workspace別並行実行を検証する。
-4. **レビュー** — PoC結果を要件定義、画面文言、リスク一覧へ反映し、MVP実装可否を決定する。
-5. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
+1. **MVP基盤** — App Serverのstdio Bridgeとworkspace lockを、fake App Serverを使う決定的テストとともに実装する。
+2. **P0: PoC-2残件** — VS Code共有、同一Thread/承認競合、変更を伴うworkspace別並行を検証する。
+3. **レビュー** — PoC結果を要件定義、画面文言、リスク一覧へ反映し、MVPの有効化条件を決定する。
+4. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
 
 アプリ本体の実装、フレームワーク初期化、依存関係の追加は、上記P0の結果とユーザーの明示指示を得るまで開始しない。
 
@@ -95,3 +96,4 @@
 - 2026-07-13: 要件定義、公式仕様調査、ユースケース、画面設計、PoC計画、リスク一覧を作成。アプリ実装は未開始。
 - 2026-07-14: AI-Dev-Process-Documentsのルールに基づくREADME、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を導入。
 - 2026-07-14: P0-0を完了し、P0-1のstdio基本経路を確認。詳細は`docs/poc/CODEX_DECK_POC_RESULTS.md`を参照。
+- 2026-07-14: P0-2でread-only Turnのworkspace A/B並行と同一workspace二重起動を確認。Deck Schedulerによるworkspace論理排他を必須とした。

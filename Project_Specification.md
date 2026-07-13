@@ -49,7 +49,7 @@ flowchart LR
 | Codex Deck Frontend | Windows PCで配信、モバイル/PCブラウザで利用 | モバイル最適化UI、WebSocket受信、閲覧・引用・承認 | 設計中 |
 | Codex Deck Backend | Windows PC | 認証、API、リアルタイム配信、workspace/Git/File Adapter | 設計中 |
 | Deck Bridge | Windows PC | App Server stdio管理、イベント正規化、排他、再接続、マスク | 設計中 |
-| Codex App Server | Windows PC、Deck Bridgeの子プロセス | Thread、Turn、Item、公式承認、Codex連携 | 公式機能を調査済み。PoC未実施 |
+| Codex App Server | Windows PC、Deck Bridgeの子プロセス | Thread、Turn、Item、公式承認、Codex連携 | P0-0/1確認済み、P0-2は条件付確認済み |
 | Deck SQLite | Windows PC、Deck専用 | workspace、表示設定、通知、未読、event受信位置、監査補助 | 未実装 |
 | Notification Adapter | Windows PC→端末 | アプリ内通知、PWA push、ntfy配送 | 設計中 |
 
@@ -143,12 +143,12 @@ Codex_Deck/
 | 2026-07-13 | 要件定義文書群のローカルリンク、コードフェンス、末尾空白、Git whitespace確認 | 本リポジトリ | 通過 |
 | 2026-07-14 | AI文書体系の導入 | 本リポジトリ | 導入済み。アプリ実装・PoCは未実施 |
 | 2026-07-14 | P0-0とP0-1基本経路 | Windows、`codex-cli 0.144.1` | schema生成、stdio handshake、Thread/Turn/Item/完了/resumeを確認。詳細は`docs/poc/CODEX_DECK_POC_RESULTS.md`。 |
+| 2026-07-14 | P0-2のread-only並行 | Windows、`codex-cli 0.144.1` | workspace A/Bと同一workspaceの同時Turnは別Thread/Turnとして完了。Deckのworkspace lockは必須。 |
 
 ### 8.3 未確認範囲
 
-- App Serverのstdio接続、承認、Itemイベント、`turn/steer`、`turn/interrupt`の実機検証
 - CLI、VS Code、Deck間のThread共有と同時操作競合
-- workspace別並行実行、ブラウザ/App Server/Windows再起動時の復旧
+- ファイル変更・承認を伴うworkspace別並行実行、ブラウザ/App Server/Windows再起動時の復旧
 - iOS/iPadOS PWA、push通知、background復帰
 - Smart_Market_AI規模のファイル、diff、pytestログの性能
 
@@ -158,7 +158,7 @@ Codex_Deck/
 | --- | --- | --- |
 | 要件定義 | 確認済み | 要件、ユースケース、画面設計、PoC、リスク、公式調査を作成済み。 |
 | AI文書体系 | 確認済み | README、仕様書、継続コンテキスト、AI指示、共通ルール、設定例を本プロジェクトへ導入済み。 |
-| App Server PoC | 一部確認済み | P0-0完了、P0-1の基本経路を確認。承認・steer・interrupt・障害・P0-2は未判定。 |
+| App Server PoC | 条件付確認済み | P0-0/1を確認し、P0-2ではread-onlyのworkspace A/B並行と同一workspace二重起動を確認。共有・競合・変更を伴う並行は残件。 |
 | アプリ本体 | 未着手 | framework、frontend、backend、DB、設定、依存関係を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |
 
