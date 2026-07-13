@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
+import { writeFileSync } from "node:fs";
 
 const cwd = process.env.CODEX_DECK_POC_CWD;
 if (!cwd) {
@@ -8,6 +9,7 @@ if (!cwd) {
 }
 const scenario = process.env.CODEX_DECK_POC_SCENARIO ?? "basic";
 const readThreadId = process.env.CODEX_DECK_POC_READ_THREAD_ID ?? null;
+const outputFile = process.env.CODEX_DECK_POC_OUTPUT_FILE ?? null;
 if (!new Set(["basic", "approval", "command-approval", "control", "active-control", "failure"]).has(scenario)) {
   throw new Error("CODEX_DECK_POC_SCENARIO must be basic, approval, command-approval, control, active-control, or failure.");
 }
@@ -26,6 +28,11 @@ const exited = new Promise((resolve) => server.once("exit", (code, signal) => re
 
 const redactId = (value) => createHash("sha256").update(value).digest("hex").slice(0, 12);
 const write = (message) => server.stdin.write(`${JSON.stringify(message)}\n`);
+const report = (result) => {
+  const text = JSON.stringify(result, null, 2);
+  if (outputFile) writeFileSync(outputFile, text, "utf8");
+  console.log(text);
+};
 const request = (method, params) => new Promise((resolve, reject) => {
   const id = nextId++;
   pending.set(id, { method, reject, resolve });
@@ -117,7 +124,7 @@ try {
     server.kill();
     const exit = await exited;
     turnPromise.catch(() => {});
-    console.log(JSON.stringify({
+    report({
       startedAt,
       scenario,
       threadIdHash: redactId(threadId),
@@ -127,7 +134,7 @@ try {
       pendingRequestMethodsAfterExit: [...pending.values()].map((entry) => entry.method).sort(),
       retryAttempted: false,
       stderrLineCount: stderr.length,
-    }, null, 2));
+    });
   } else {
   const turn = await turnPromise;
   if (scenario === "control") {
@@ -137,7 +144,7 @@ try {
   const read = await request("thread/read", { threadId });
   const resumed = await request("thread/resume", { threadId });
   const itemMethods = [...new Set(notifications.map((entry) => entry.method))].sort();
-  console.log(JSON.stringify({
+  report({
     startedAt,
     initialize: { platformFamily: initialize.platformFamily, platformOs: initialize.platformOs, userAgent: initialize.userAgent },
     threadListBeforeCount: before.data?.length ?? before.threads?.length ?? null,
@@ -152,7 +159,7 @@ try {
     interruptOutcome,
     notificationMethods: itemMethods,
     stderrLineCount: stderr.length,
-  }, null, 2));
+  });
   }
 } finally {
   server.kill();
