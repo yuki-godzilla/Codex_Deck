@@ -148,6 +148,12 @@ class StdioJsonRpcTransport:
         """Respond to a server request after an explicit Deck user decision."""
         self._write({"id": request_id, "result": result})
 
+    def set_incoming_handler(self, handler: Callable[[IncomingMessage], None]) -> None:
+        """Install the Bridge handler before starting the stdio process."""
+        if self._process is not None:
+            raise RuntimeError("Set the incoming handler before starting App Server")
+        self._on_incoming = handler
+
     def close(self) -> None:
         process = self._process
         self._process = None
@@ -191,3 +197,22 @@ class StdioJsonRpcTransport:
                     response_queue.put(message)
                     continue
             self._on_incoming(IncomingMessage(message=message))
+
+
+class ApprovalTransportBinding:
+    """Connect stable server approval requests to an explicit approval broker."""
+
+    def __init__(self, transport: "ApprovalResponseTransport", broker: "ApprovalReceiver") -> None:
+        self._transport = transport
+        self._broker = broker
+
+    def handle(self, incoming: IncomingMessage) -> None:
+        self._broker.receive(incoming.message)
+
+
+class ApprovalResponseTransport(Protocol):
+    def respond(self, request_id: int, result: JsonObject) -> None: ...
+
+
+class ApprovalReceiver(Protocol):
+    def receive(self, message: JsonObject) -> object: ...

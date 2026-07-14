@@ -1,6 +1,7 @@
 import unittest
 
-from codex_deck.app_server import AppServerStdioClient
+from codex_deck.app_server import AppServerStdioClient, ApprovalTransportBinding, IncomingMessage
+from codex_deck.approvals import ApprovalBroker
 
 
 class FakeTransport:
@@ -67,6 +68,17 @@ class AppServerClientTest(unittest.TestCase):
                 approval_policy="untrusted",
                 sandbox="read-only",
             )
+
+    def test_binding_forwards_server_request_and_preserves_request_id(self) -> None:
+        responses = []
+        class Transport:
+            def respond(self, request_id, result): responses.append((request_id, result))
+        broker = ApprovalBroker(Transport().respond)
+        binding = ApprovalTransportBinding(Transport(), broker)
+        binding.handle(IncomingMessage({"id": 42, "method": "item/fileChange/requestApproval", "params": {
+            "threadId": "thread", "turnId": "turn", "itemId": "item"}}))
+        broker.decide(42, "decline")
+        self.assertEqual(responses, [(42, {"decision": "decline"})])
 
 
 if __name__ == "__main__":
