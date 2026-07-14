@@ -41,6 +41,7 @@
 6. Web上の人間による直接コード編集と自由ターミナルは初期リリース対象外である。
 7. Windows再起動、App Server障害、ブラウザ切断後にCodex依頼を自動再実行しない。中断、ログ、明示再開を優先する。
 8. SMAIとはリポジトリ、プロセス、ポート、DB、ログ、設定、起動/更新/障害復旧、通知topicを共有しない。
+9. Deckの開発UI/APIはそれぞれ`127.0.0.1:43173`/`127.0.0.1:43174`を既定とし、外部URLは`https://codex-deck.<tailnet-name>.ts.net`形式に統一する。実際のtailnet名は共有しない。
 
 ## 4. 現在の進捗
 
@@ -106,3 +107,4 @@
 - 2026-07-14: Git statusと許可済み1ファイルdiffの読み取り専用adapterを追加。固定の非対話コマンドだけを使い、commit/stage/checkout/reset/merge/push/pullは提供しない。
 - 2026-07-14: stableなcommand/file approval requestを保留し、明示的な公式decisionだけを返すApproval Brokerを追加。実App Server transport結合と未対応approval種別は未実装。
 - 2026-07-14: Approval Brokerの決定をDeck専用SQLiteへ最小監査情報として永続化。command/cwd/reason/file change本文は保存しない。
+- 2026-07-14: SMAIと衝突しないDeck専用の開発UI/APIポート`43173`/`43174`、Tailscale正規URL形式`https://codex-deck.<tailnet-name>.ts.net`、loopback bind方針を確定した。詳細は`docs/operations/CODEX_DECK_ENDPOINTS.md`を参照。

@@ -118,7 +118,7 @@ Codex_Deck/
     └── research/
 ```
 
-`backend/`には、App Serverのstdio JSON-RPC transport、Bridge契約、workspace排他Scheduler、SQLite対応Deck event store、許可root内のworkspace catalog、読み取り専用File Adapter、FastAPI HTTP/WebSocket API、およびfake App Serverによるunit testを配置した。`frontend/`には、workspace/Active work/eventを表示し依頼開始を行うReact UI縦スライスを配置した。SQLiteファイルの本番起動構成、実 App Serverを使う結合test、認証、PWA、起動設定は未作成である。
+`backend/`には、App Serverのstdio JSON-RPC transport、Bridge契約、workspace排他Scheduler、SQLite対応Deck event store、許可root内のworkspace catalog、読み取り専用File Adapter、FastAPI HTTP/WebSocket API、およびfake App Serverによるunit testを配置した。`frontend/`には、workspace/Active work/eventを表示し依頼開始を行うReact UI縦スライスを配置した。開発時のDeck専用UI/APIポートは`43173`/`43174`で、外部originは`https://codex-deck.<tailnet-name>.ts.net`形式とする。SQLiteファイルの本番起動構成、実 App Serverを使う結合test、認証、PWA、起動設定は未作成である。
 
 ### 6.2 実装開始後の責務境界
 

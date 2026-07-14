@@ -90,8 +90,17 @@ def main() -> None:
     parser.add_argument("--database", default="codex-deck.db", help="Deck-owned SQLite event database path.")
     parser.add_argument("--workspace-root", action="append", default=[], help="Allowed local root. Repeat as needed.")
     parser.add_argument("--workspace", action="append", default=[], help="Explicitly register a workspace beneath an allowed root.")
-    parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", default=8000, type=int)
+    parser.add_argument(
+        "--host",
+        default=os.getenv("CODEX_DECK_BIND_HOST", "127.0.0.1"),
+        help="Loopback bind host by default. Configure an external origin through the reverse proxy, not here.",
+    )
+    parser.add_argument(
+        "--port",
+        default=int(os.getenv("CODEX_DECK_API_PORT", "43174")),
+        type=int,
+        help="Deck API port (default: CODEX_DECK_API_PORT or 43174).",
+    )
     args = parser.parse_args()
     demo = args.demo or os.getenv("CODEX_DECK_DEMO") == "1"
     uvicorn.run(
