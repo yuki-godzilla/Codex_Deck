@@ -9,6 +9,8 @@ from pathlib import Path
 import uvicorn
 
 from .api import create_app
+from .approvals import ApprovalBroker
+from .approval_audit import SqliteApprovalAuditStore
 from .bridge import Bridge
 from .events import SqliteEventStore
 from .files import ReadOnlyFileService
@@ -52,6 +54,8 @@ def create_local_app(
     """Create a local API without opening an App Server network listener."""
     scheduler = Scheduler()
     events = SqliteEventStore(database_path)
+    approval_audit = SqliteApprovalAuditStore(database_path)
+    approvals = ApprovalBroker(lambda _request_id, _result: None, on_decided=approval_audit.append)
     workspaces = WorkspaceStore(database_path, allowed_roots=allowed_roots)
     for workspace_path in workspace_paths:
         workspaces.register(workspace_path)
@@ -66,13 +70,17 @@ def create_local_app(
             workspaces=workspaces,
             files=ReadOnlyFileService(workspaces),
             git=ReadOnlyGitService(workspaces),
+            approvals=approvals,
+            approval_audit=approval_audit,
         )
         app.router.on_shutdown.append(events.close)
         app.router.on_shutdown.append(workspaces.close)
+        app.router.on_shutdown.append(approval_audit.close)
         return app
     except Exception:
         events.close()
         workspaces.close()
+        approval_audit.close()
         raise
 
 

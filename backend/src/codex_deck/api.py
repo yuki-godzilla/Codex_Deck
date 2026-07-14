@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from .bridge import StartWorkRequest
 from .approvals import ApprovalBroker, PendingApproval
+from .approval_audit import ApprovalAuditRecord, SqliteApprovalAuditStore
 from .events import DeckEvent
 from .files import FileAccessError, FileEntry, ReadOnlyFileService, TextFile
 from .git import GitAccessError, GitDiff, GitFileStatus, GitStatus, ReadOnlyGitService
@@ -93,6 +94,8 @@ class ApprovalBody(BaseModel):
 
 class ApprovalDecisionBody(BaseModel):
     decision: str = Field(min_length=1)
+class ApprovalAuditBody(BaseModel):
+    audit_id: int; request_id: int; kind: str; thread_id: str; turn_id: str; item_id: str; decision: str; decided_at: datetime
 
 
 def _work_body(work: ActiveWork) -> ActiveWorkBody:
@@ -158,6 +161,8 @@ def _git_diff_body(diff: GitDiff) -> GitDiffBody:
 
 def _approval_body(value: PendingApproval) -> ApprovalBody:
     return ApprovalBody(**{field: getattr(value, field) for field in ApprovalBody.model_fields})
+def _audit_body(value: ApprovalAuditRecord) -> ApprovalAuditBody:
+    return ApprovalAuditBody(**{field: getattr(value, field) for field in ApprovalAuditBody.model_fields})
 
 
 def create_app(
@@ -167,6 +172,7 @@ def create_app(
     files: ReadOnlyFileService | None = None,
     git: ReadOnlyGitService | None = None,
     approvals: ApprovalBroker | None = None,
+    approval_audit: SqliteApprovalAuditStore | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Codex Deck API", version="0.1.0")
 
@@ -188,6 +194,10 @@ def create_app(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="approval not found") from error
         except ValueError as error:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from error
+
+    @app.get("/api/v1/approval-audit", response_model=list[ApprovalAuditBody])
+    def list_approval_audit(limit: int = Query(default=100, ge=1, le=200)) -> list[ApprovalAuditBody]:
+        return [] if approval_audit is None else [_audit_body(item) for item in approval_audit.list(limit=limit)]
 
     @app.get("/api/v1/workspaces", response_model=list[WorkspaceBody])
     def list_workspaces() -> list[WorkspaceBody]:

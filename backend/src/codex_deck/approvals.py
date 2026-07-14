@@ -29,8 +29,9 @@ class PendingApproval:
 class ApprovalBroker:
     """Holds pending approvals until a human sends an official decision."""
 
-    def __init__(self, responder: Callable[[int, dict[str, str]], None]) -> None:
+    def __init__(self, responder: Callable[[int, dict[str, str]], None], *, on_decided: Callable[[PendingApproval, str], None] | None = None) -> None:
         self._responder = responder
+        self._on_decided = on_decided or (lambda _approval, _decision: None)
         self._pending: dict[int, PendingApproval] = {}
         self._lock = Lock()
 
@@ -67,7 +68,13 @@ class ApprovalBroker:
             approval = self._pending.pop(request_id, None)
         if approval is None:
             raise KeyError(request_id)
-        self._responder(request_id, {"decision": decision})
+        try:
+            self._responder(request_id, {"decision": decision})
+            self._on_decided(approval, decision)
+        except Exception:
+            with self._lock:
+                self._pending[request_id] = approval
+            raise
         return approval
 
 

@@ -1,7 +1,10 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from fastapi.testclient import TestClient
 from codex_deck.api import create_app
 from codex_deck.approvals import ApprovalBroker
+from codex_deck.approval_audit import SqliteApprovalAuditStore
 from codex_deck.bridge import Bridge
 from codex_deck.events import EventStore
 from codex_deck.scheduler import Scheduler
@@ -25,5 +28,16 @@ class ApprovalTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(responses, [(9, {"decision": "decline"})])
         self.assertEqual(api.get("/api/v1/approvals").json(), [])
+
+    def test_decision_audit_persists_without_command_content(self) -> None:
+        with TemporaryDirectory() as directory:
+            audit = SqliteApprovalAuditStore(Path(directory) / "deck.db")
+            broker = ApprovalBroker(lambda _id, _result: None, on_decided=audit.append)
+            broker.receive({"id": 4, "method": "item/fileChange/requestApproval", "params": {"threadId": "t", "turnId": "u", "itemId": "i", "reason": "write"}})
+            broker.decide(4, "accept")
+            records = audit.list()
+            audit.close()
+        self.assertEqual(records[0].decision, "accept")
+        self.assertEqual(records[0].kind, "fileChange")
 
 if __name__ == "__main__": unittest.main()
