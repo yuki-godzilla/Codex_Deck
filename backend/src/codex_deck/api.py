@@ -87,6 +87,7 @@ class GitDiffBody(BaseModel):
     mode: str
     content: str
     truncated: bool
+    is_binary: bool
 
 class ApprovalBody(BaseModel):
     request_id: int; kind: str; thread_id: str; turn_id: str; item_id: str
@@ -157,7 +158,7 @@ def _git_status_body(status_value: GitStatus) -> GitStatusBody:
 
 
 def _git_diff_body(diff: GitDiff) -> GitDiffBody:
-    return GitDiffBody(path=diff.path, mode=diff.mode, content=diff.content, truncated=diff.truncated)
+    return GitDiffBody(path=diff.path, mode=diff.mode, content=diff.content, truncated=diff.truncated, is_binary=diff.is_binary)
 
 def _approval_body(value: PendingApproval) -> ApprovalBody:
     return ApprovalBody(**{field: getattr(value, field) for field in ApprovalBody.model_fields})

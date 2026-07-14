@@ -40,6 +40,7 @@ class GitDiff:
     mode: str
     content: str
     truncated: bool
+    is_binary: bool
 
 
 class ReadOnlyGitService:
@@ -94,11 +95,13 @@ class ReadOnlyGitService:
         arguments.extend(["--", normalized])
         raw = self._run(workspace, *arguments)
         truncated = len(raw) > self._maximum_diff_bytes
+        is_binary = b"Binary files" in raw or b"GIT binary patch" in raw
         return GitDiff(
             path=normalized,
             mode="staged" if staged else "unstaged",
             content=raw[:self._maximum_diff_bytes].decode("utf-8", errors="replace"),
             truncated=truncated,
+            is_binary=is_binary,
         )
 
     def _is_repository(self, workspace: Workspace) -> bool:

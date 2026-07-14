@@ -18,6 +18,9 @@ class GitAdapterTest(unittest.TestCase):
         subprocess.run(["git", "-C", str(self.workspace_path), "add", "tracked.txt"], check=True)
         (self.workspace_path / "tracked.txt").write_text("second\n", encoding="utf-8")
         (self.workspace_path / ".env").write_text("SECRET=value\n", encoding="utf-8")
+        (self.workspace_path / "asset.bin").write_bytes(b"\x00before")
+        subprocess.run(["git", "-C", str(self.workspace_path), "add", "asset.bin"], check=True)
+        (self.workspace_path / "asset.bin").write_bytes(b"\x00after")
         self.store = WorkspaceStore(Path(self.temporary_directory.name) / "deck.db", allowed_roots=(self.root,))
         self.workspace = self.store.register(self.workspace_path)
         self.git = ReadOnlyGitService(self.store)
@@ -29,9 +32,9 @@ class GitAdapterTest(unittest.TestCase):
     def test_status_and_diff_are_read_only_and_filter_denied_paths(self) -> None:
         status = self.git.status(self.workspace.workspace_id)
         self.assertTrue(status.is_repository)
-        self.assertEqual(status.staged_count, 1)
-        self.assertEqual(status.unstaged_count, 1)
-        self.assertEqual([entry.path for entry in status.entries], ["tracked.txt"])
+        self.assertEqual(status.staged_count, 2)
+        self.assertEqual(status.unstaged_count, 2)
+        self.assertEqual([entry.path for entry in status.entries], ["asset.bin", "tracked.txt"])
 
         diff = self.git.diff(self.workspace.workspace_id, relative_path="tracked.txt")
         self.assertEqual(diff.mode, "unstaged")
@@ -40,6 +43,9 @@ class GitAdapterTest(unittest.TestCase):
             self.git.diff(self.workspace.workspace_id, relative_path=".env")
         with self.assertRaises(GitAccessError):
             self.git.diff(self.workspace.workspace_id, relative_path="../outside.txt")
+
+        binary = self.git.diff(self.workspace.workspace_id, relative_path="asset.bin")
+        self.assertTrue(binary.is_binary)
 
 
 if __name__ == "__main__":
