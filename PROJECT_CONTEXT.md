@@ -16,7 +16,7 @@
 | プロジェクト | Codex Deck |
 | 主目的 | Windows PC上のCodexを、スマートフォン、タブレット、PCブラウザから遠隔操作・監視・レビューするモバイルファーストWebクライアントを作る。 |
 | 現在フェーズ | P0の互換性PoCとMVP実装基盤の整備。 |
-| 実装状況 | PoC harness、Scheduler/Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、許可root内workspace/File/Git read adapter、React UI縦スライスを実装済み。UI実画面検証、実 App Server結合test、認証、実行設定は未完了。 |
+| 実装状況 | PoC harness、Scheduler/Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、許可root内workspace/File/Git read adapter、React UI縦スライスを実装済み。UI実画面検証、認証、実行設定は未完了。 |
 | 正本 | CodexのThread、Turn、Item、approval policy、sandbox設定。Deck DBは補助情報のみ。 |
 | 主要端末 | iPhone、iPad、PCブラウザ。PCの単純縮小版ではない。 |
 
@@ -110,3 +110,4 @@
 - 2026-07-14: Approval Brokerの決定をDeck専用SQLiteへ最小監査情報として永続化。command/cwd/reason/file change本文は保存しない。
 - 2026-07-14: SMAIと衝突しないDeck専用の開発UI/APIポート`43173`/`43174`、Tailscale正規URL形式`https://codex-deck.<tailnet-name>.ts.net`、loopback bind方針を確定した。詳細は`docs/operations/CODEX_DECK_ENDPOINTS.md`を参照。
 - 2026-07-14: 実App ServerとDeck Approval Brokerを結合し、command approvalの受信、同一request IDへの`decline`、最小SQLite監査、App Server障害時の自動決定・再送なしを確認した。
+- 2026-07-14: 読み取り専用File/Git Adapterを拡張し、UTF-16/CP932表示、rename元・deleted file・remote名、bounded diff chunk取得を追加した。UIは`43173`、demo APIは`43174`でローカル表示できる。

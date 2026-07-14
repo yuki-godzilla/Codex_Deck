@@ -128,7 +128,7 @@ Codex_Deck/
 | Backend API | Deck API、認証、WebSocket、通知、UI補助状態 | Active work、event replay、WebSocket配信を実装。SQLite event storeは実装済みだが、起動時のDB構成、認証、通知は未実装。Codex Thread正本やユーザーtokenをDBへ複製しない。 |
 | Bridge | App Server stdio、JSON-RPC、event順序、再同期、mask、process監視 | stdio start/initialize/thread-start/turn-startの最小adapterを実装。実 App Server結合test、event永続化、再同期、maskは未実装。 |
 | Scheduler | workspace lock、Active work、停止/中断、再起動時の状態遷移 | 前回Turnの自動再実行を禁止する。 |
-| File/Git Adapter | 許可root配下の読み取り、Git状態/diff、deny/mask | workspaceを起動時ローカル引数で明示登録し、UTF-8 textの一覧/読取、Git status、許可済み1ファイルdiffを実装。直接編集・自由なOS探索・Git変更操作を提供しない。 |
+| File/Git Adapter | 許可root配下の読み取り、Git状態/diff、deny/mask | workspaceを起動時ローカル引数で明示登録し、UTF-8/UTF-16/CP932 textの一覧/読取、rename元・deleted file・remote名を含むGit status、許可済み1ファイルdiffのchunk取得を実装。直接編集・自由なOS探索・Git変更操作を提供しない。 |
 | Notification Adapter | in-app/PWA/ntfyの配送・既読・quiet hours | SMAIのコード、DB、設定、topicと共有しない。 |
 
 ## 7. 外部インターフェース

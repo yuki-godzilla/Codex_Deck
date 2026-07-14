@@ -63,12 +63,14 @@ class TextFileBody(BaseModel):
     content: str
     size_bytes: int
     line_count: int
+    encoding: str
 
 
 class GitFileStatusBody(BaseModel):
     path: str
     index_status: str
     worktree_status: str
+    original_path: str | None
 
 
 class GitStatusBody(BaseModel):
@@ -79,6 +81,7 @@ class GitStatusBody(BaseModel):
     staged_count: int
     unstaged_count: int
     untracked_count: int
+    remotes: list[str]
     entries: list[GitFileStatusBody]
 
 
@@ -88,6 +91,9 @@ class GitDiffBody(BaseModel):
     content: str
     truncated: bool
     is_binary: bool
+    offset: int
+    next_offset: int | None
+    total_characters: int
 
 class ApprovalBody(BaseModel):
     request_id: int; kind: str; thread_id: str; turn_id: str; item_id: str
@@ -134,7 +140,7 @@ def _file_entry_body(entry: FileEntry) -> FileEntryBody:
 
 
 def _text_file_body(file: TextFile) -> TextFileBody:
-    return TextFileBody(path=file.path, content=file.content, size_bytes=file.size_bytes, line_count=file.line_count)
+    return TextFileBody(path=file.path, content=file.content, size_bytes=file.size_bytes, line_count=file.line_count, encoding=file.encoding)
 
 
 def _git_status_body(status_value: GitStatus) -> GitStatusBody:
@@ -146,11 +152,13 @@ def _git_status_body(status_value: GitStatus) -> GitStatusBody:
         staged_count=status_value.staged_count,
         unstaged_count=status_value.unstaged_count,
         untracked_count=status_value.untracked_count,
+        remotes=status_value.remotes,
         entries=[
             GitFileStatusBody(
                 path=entry.path,
                 index_status=entry.index_status,
                 worktree_status=entry.worktree_status,
+                original_path=entry.original_path,
             )
             for entry in status_value.entries
         ],
@@ -158,7 +166,7 @@ def _git_status_body(status_value: GitStatus) -> GitStatusBody:
 
 
 def _git_diff_body(diff: GitDiff) -> GitDiffBody:
-    return GitDiffBody(path=diff.path, mode=diff.mode, content=diff.content, truncated=diff.truncated, is_binary=diff.is_binary)
+    return GitDiffBody(**{field: getattr(diff, field) for field in GitDiffBody.model_fields})
 
 def _approval_body(value: PendingApproval) -> ApprovalBody:
     return ApprovalBody(**{field: getattr(value, field) for field in ApprovalBody.model_fields})
@@ -248,11 +256,13 @@ def create_app(
         workspace_id: str,
         path: str = Query(min_length=1),
         staged: bool = False,
+        offset: int = Query(default=0, ge=0),
+        limit: int = Query(default=200_000, ge=1, le=1_000_000),
     ) -> GitDiffBody:
         if git is None:
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="git adapter is not configured")
         try:
-            return _git_diff_body(git.diff(workspace_id, relative_path=path, staged=staged))
+            return _git_diff_body(git.diff(workspace_id, relative_path=path, staged=staged, offset=offset, limit=limit))
         except KeyError as error:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="workspace not found") from error
         except GitAccessError as error:

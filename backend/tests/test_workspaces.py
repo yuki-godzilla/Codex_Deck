@@ -36,6 +36,7 @@ class WorkspaceAndFileTest(unittest.TestCase):
         self.assertEqual(names, ["src", "binary.bin"])
         text = self.files.read_text(self.workspace.workspace_id, "src/main.py")
         self.assertEqual(text.line_count, 1)
+        self.assertEqual(text.encoding, "utf-8")
         self.assertIn("safe", text.content)
         with self.assertRaises(FileAccessError):
             self.files.read_text(self.workspace.workspace_id, ".env")
@@ -43,6 +44,12 @@ class WorkspaceAndFileTest(unittest.TestCase):
             self.files.read_text(self.workspace.workspace_id, "../outside/secret.txt")
         with self.assertRaisesRegex(ValueError, "Binary"):
             self.files.read_text(self.workspace.workspace_id, "binary.bin")
+
+    def test_read_text_reports_supported_encoding(self) -> None:
+        (self.workspace_path / "legacy.txt").write_bytes("日本語\r\n".encode("cp932"))
+        text = self.files.read_text(self.workspace.workspace_id, "legacy.txt")
+        self.assertEqual(text.content, "日本語\r\n")
+        self.assertEqual(text.encoding, "cp932")
 
 
 if __name__ == "__main__":

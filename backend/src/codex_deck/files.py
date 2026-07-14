@@ -26,6 +26,7 @@ class TextFile:
     content: str
     size_bytes: int
     line_count: int
+    encoding: str
 
 
 class ReadOnlyFileService:
@@ -72,17 +73,13 @@ class ReadOnlyFileService:
         if size > self._maximum_file_bytes:
             raise ValueError("File exceeds the read-only preview limit")
         raw = path.read_bytes()
-        if b"\x00" in raw:
-            raise ValueError("Binary files cannot be previewed")
-        try:
-            content = raw.decode("utf-8")
-        except UnicodeDecodeError as error:
-            raise ValueError("Only UTF-8 text files can be previewed") from error
+        content, encoding = _decode_preview(raw)
         return TextFile(
             path=relative_path.replace("\\", "/"),
             content=content,
             size_bytes=size,
             line_count=len(content.splitlines()),
+            encoding=encoding,
         )
 
     def _resolve(self, workspace: Workspace, relative_path: str) -> Path:
@@ -109,3 +106,22 @@ class ReadOnlyFileService:
             or filename in {"id_rsa", "id_ed25519", "credentials", "credentials.json"}
             or filename.endswith((".pem", ".key", ".p12", ".pfx"))
         )
+
+
+def _decode_preview(raw: bytes) -> tuple[str, str]:
+    """Decode only common, explicit text encodings; never guess binary data."""
+    if raw.startswith(b"\xef\xbb\xbf"):
+        return raw.decode("utf-8-sig"), "utf-8"
+    if raw.startswith(b"\xff\xfe"):
+        return raw.decode("utf-16"), "utf-16le"
+    if raw.startswith(b"\xfe\xff"):
+        return raw.decode("utf-16"), "utf-16be"
+    if b"\x00" in raw:
+        raise ValueError("Binary files cannot be previewed")
+    try:
+        return raw.decode("utf-8"), "utf-8"
+    except UnicodeDecodeError:
+        try:
+            return raw.decode("cp932"), "cp932"
+        except UnicodeDecodeError as error:
+            raise ValueError("Unsupported text encoding or binary file") from error
