@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Codex Deck</title>
+  <defs>
+    <linearGradient id="background" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#263b6b"/>
+      <stop offset="1" stop-color="#101725"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="154" y1="154" x2="370" y2="370" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c3d2ff"/>
+      <stop offset="1" stop-color="#79d7a1"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#background)"/>
+  <rect x="97" y="123" width="318" height="266" rx="38" fill="#151f33" stroke="#607aaa" stroke-width="12"/>
+  <path d="M151 204h91M151 256h150M151 308h73" stroke="#aebee1" stroke-width="20" stroke-linecap="round"/>
+  <path d="m295 184 72 72-72 72" fill="none" stroke="url(#accent)" stroke-width="29" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="386" cy="128" r="34" fill="#79d7a1" stroke="#101725" stroke-width="13"/>
+</svg>
