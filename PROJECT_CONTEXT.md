@@ -53,7 +53,8 @@
 | PoC-0 | 確認済み | `codex-cli 0.144.1`からTypeScript/JSON Schemaを生成し、tree hashを記録した。 |
 | PoC-1 | 条件付確認済み | stdio handshake、Thread操作、主要Item、完了、resume、file/command approvalの`decline`、実行中Turnのsteer/interrupt受理、強制終了後の再送なし、再起動後の保存Thread読取を確認。実行中Turnの公式復帰は未確認で、中断扱いとする。 |
 | PoC-2 | 条件付確認済み | CLI起点ThreadはID指定の`thread/read`で読めたが、同cwdの`thread/list`では検出できなかった。read-only Turnはworkspace A/Bおよび同一workspaceで同時に完了した。VS Code共有、同一Thread/承認競合、変更を伴う並行は未検証。 |
-| アプリ実装 | UI検証保留 | ユーザーの明示依頼により、PoC結果を越える互換性を前提にしないBridge/Scheduler基盤とUI縦スライスを実装した。ブラウザ連携不備によりUI実画面検証は未完了。 |
+| App Server承認結合 | 確認済み | 実App Serverでcommand approvalをBrokerが受信し、同一request IDへの`decline`、最小SQLite監査、障害中の自動決定・再送なしを確認した。障害のUI表示・復旧導線は未実装。 |
+| アプリ実装 | UI検証保留 | ユーザーの明示依頼により、PoC結果を越える互換性を前提にしないBridge/Scheduler基盤とUI縦スライスを実装した。ブラウザ連携プラグインの版不整合によりUI実画面検証は未完了。 |
 
 ## 5. 未決事項
 
@@ -108,3 +109,4 @@
 - 2026-07-14: stableなcommand/file approval requestを保留し、明示的な公式decisionだけを返すApproval Brokerを追加。実App Server transport結合と未対応approval種別は未実装。
 - 2026-07-14: Approval Brokerの決定をDeck専用SQLiteへ最小監査情報として永続化。command/cwd/reason/file change本文は保存しない。
 - 2026-07-14: SMAIと衝突しないDeck専用の開発UI/APIポート`43173`/`43174`、Tailscale正規URL形式`https://codex-deck.<tailnet-name>.ts.net`、loopback bind方針を確定した。詳細は`docs/operations/CODEX_DECK_ENDPOINTS.md`を参照。
+- 2026-07-14: 実App ServerとDeck Approval Brokerを結合し、command approvalの受信、同一request IDへの`decline`、最小SQLite監査、App Server障害時の自動決定・再送なしを確認した。

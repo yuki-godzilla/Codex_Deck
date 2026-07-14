@@ -40,4 +40,20 @@ class ApprovalTest(unittest.TestCase):
         self.assertEqual(records[0].decision, "accept")
         self.assertEqual(records[0].kind, "fileChange")
 
+    def test_failed_explicit_decision_keeps_approval_pending_without_audit(self) -> None:
+        with TemporaryDirectory() as directory:
+            audit = SqliteApprovalAuditStore(Path(directory) / "deck.db")
+            broker = ApprovalBroker(
+                lambda _id, _result: (_ for _ in ()).throw(RuntimeError("transport unavailable")),
+                on_decided=audit.append,
+            )
+            broker.receive({"id": 7, "method": "item/commandExecution/requestApproval", "params": {
+                "threadId": "t", "turnId": "u", "itemId": "i", "command": "Get-Date",
+            }})
+            with self.assertRaisesRegex(RuntimeError, "transport unavailable"):
+                broker.decide(7, "decline")
+            self.assertEqual([item.request_id for item in broker.list()], [7])
+            self.assertEqual(audit.list(), [])
+            audit.close()
+
 if __name__ == "__main__": unittest.main()

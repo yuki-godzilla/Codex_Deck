@@ -46,6 +46,19 @@
 | App Server強制終了 | 実行中Turn開始後に`SIGTERM`で終了。検証クライアントは`turn/start`を1回だけ送信し、再送・二重Turnを発生させなかった | 条件付合格。 |
 | App Server再起動後の読取 | 新しいstdio接続で同じ使い捨てworkspaceの既存Thread一覧を取得し、`thread/read`と`thread/resume`を再確認。前回Turnの自動再実行は行わなかった | 条件付合格。強制終了した特定Turnの実行中状態を公式に復帰できるかは未確認。 |
 
+### 4.1 Deck Approval Broker実機結合
+
+`tools/poc/live_approval_broker.py`で、Deckの`StdioJsonRpcTransport`、`ApprovalTransportBinding`、`ApprovalBroker`、SQLite監査storeを実App Serverへ結合した。既存workspaceをcwdにするだけで、書込みを許可せずに実施した。
+
+| 確認項目 | 観測結果 | 判定 |
+| --- | --- | --- |
+| command approval受信 | `untrusted` / `workspace-write`で発生した`item/commandExecution/requestApproval`をBrokerが1件だけ保留 | 合格 |
+| 同一request IDへの`decline` | Brokerの保留IDとtransportへの応答IDが一致し、公式`decline`を送信 | 合格 |
+| 最小監査ログ | Deck専用の一時SQLiteに、同一request ID、種別、`decline`、時刻だけを記録。command/cwd/reason本文は保存しない | 合格 |
+| App Server障害中の承認 | 承認保留中にApp Serverを終了。保留は残り、監査0件、決定・再送なし | 合格 |
+
+このPoCは「障害時に自動決定・自動再送しない」ことを確認したものである。障害検知、UIへの中断表示、利用者が復旧後に改めて操作する導線はPoC-3/実行状態実装の残件である。
+
 Thread IDとTurn IDは保存せず、それぞれのハッシュ先頭12文字だけを検証時に確認した。App Server stderrは2行出力されたが、内容は証跡へ保存していない。
 
 ## 5. P0-2 セッション共有・並行実行
