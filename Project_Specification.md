@@ -164,6 +164,7 @@ Codex_Deck/
 | 2026-07-14 | HTTP API / event replay | FastAPI、fake App Server | health、work開始、workspace競合の`409`、event IDによるreplay、依頼本文をevent payloadに複製しないことを3 unit testで確認。 |
 | 2026-07-14 | SQLite / WebSocket event配信 | SQLite、FastAPI TestClient | SQLite再open後のevent replay、WebSocketのreplayとリアルタイム配信を3 unit testで確認。 |
 | 2026-07-14 | UI縦スライス | React/Vite、明示的なfake App Server | production build、ローカルHTTP配信、デモThread/Turn/event生成を確認。ブラウザ連携不備により実画面のviewport/操作確認は保留。 |
+| 2026-07-15 | UI縦スライス実画面検証 | Chrome、Vite、明示的なfake App Server | 390×844、768×1024、1280×900で表示を確認。依頼開始、`work.started`表示、接続中表示、切断時の再接続待ちと下書き保持を実操作で確認。Vite開発プロキシのWebSocket中継を修正。 |
 | 2026-07-14 | workspace / File Adapter | SQLite、temporary filesystem | 許可root外の登録拒否、秘密情報のdeny、親ディレクトリ越境拒否、binary拒否、Browser APIが絶対pathを返さないことをunit testで確認。 |
 | 2026-07-14 | Git read adapter | temporary Git repository | noninteractiveなstatus/diff、秘密対象のstatus/diff除外、Browser APIのstatus/diff読取をunit testで確認。Git変更操作は未実装。 |
 | 2026-07-14 | Approval Broker | fake App Server request | command/file approvalを保留し、明示的な公式decisionだけを応答するAPIをunit testで確認。実App Server結合は未実施。 |
@@ -186,7 +187,7 @@ Codex_Deck/
 | Backend基盤 / API | 実装中 | Scheduler、Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、fake transport unit testを実装。 |
 | Workspace / File / Git Adapter | 実装中 | 許可root内の明示登録、絶対path非公開、読み取り専用一覧/UTF-8プレビュー、secret/外部symlink deny、Git statusと1ファイルdiffを実装。Git変更操作は未実装。 |
 | Approval Broker | 実装中 | stableなcommand/file approvalの保留・一覧・公式decision応答、最小監査永続化を実装。実App Server transport結合、permissions/network amendmentは未実装。 |
-| Web UI | 検証保留 | 最初のレスポンシブ縦スライスを実装。実ブラウザの操作・目視確認が未実施のため、完了扱いにしない。 |
+| Web UI | demo検証済み | 最初のレスポンシブ縦スライスを、代表ビューポートとfake App Serverで実画面・操作確認済み。実Codex、実モバイル端末、PWA通知はlive PoCで未確認。 |
 | 運用構成 | 未着手 | SQLiteファイルの本番起動時構成、実 App Server結合test、認証、PWA、設定を未作成。 |
 | Windows運用 | 未着手 | task scheduler/launcher/health設計のみ。 |
 

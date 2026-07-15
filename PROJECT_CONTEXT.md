@@ -16,7 +16,7 @@
 | プロジェクト | Codex Deck |
 | 主目的 | Windows PC上のCodexを、スマートフォン、タブレット、PCブラウザから遠隔操作・監視・レビューするモバイルファーストWebクライアントを作る。 |
 | 現在フェーズ | P0の互換性PoCとMVP実装基盤の整備。 |
-| 実装状況 | PoC harness、Scheduler/Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、許可root内workspace/File/Git read adapter、React UI縦スライスを実装済み。UI実画面検証、認証、実行設定は未完了。 |
+| 実装状況 | PoC harness、Scheduler/Bridge開始契約、App Server stdio adapter、SQLite対応event store、FastAPI HTTP/WebSocket API、許可root内workspace/File/Git read adapter、React UI縦スライスを実装済み。UI縦スライスはfake App Serverで実画面検証済み。認証、実Codex、実モバイル端末、実行設定は未完了。 |
 | 正本 | CodexのThread、Turn、Item、approval policy、sandbox設定。Deck DBは補助情報のみ。 |
 | 主要端末 | iPhone、iPad、PCブラウザ。PCの単純縮小版ではない。 |
 
@@ -54,7 +54,7 @@
 | PoC-1 | 条件付確認済み | stdio handshake、Thread操作、主要Item、完了、resume、file/command approvalの`decline`、実行中Turnのsteer/interrupt受理、強制終了後の再送なし、再起動後の保存Thread読取を確認。実行中Turnの公式復帰は未確認で、中断扱いとする。 |
 | PoC-2 | 条件付確認済み | CLI起点ThreadはID指定の`thread/read`で読めたが、同cwdの`thread/list`では検出できなかった。read-only Turnはworkspace A/Bおよび同一workspaceで同時に完了した。VS Code共有、同一Thread/承認競合、変更を伴う並行は未検証。 |
 | App Server承認結合 | 確認済み | 実App Serverでcommand approvalをBrokerが受信し、同一request IDへの`decline`、最小SQLite監査、障害中の自動決定・再送なしを確認した。障害のUI表示・復旧導線は未実装。 |
-| アプリ実装 | UI検証保留 | ユーザーの明示依頼により、PoC結果を越える互換性を前提にしないBridge/Scheduler基盤とUI縦スライスを実装した。ブラウザ連携プラグインの版不整合によりUI実画面検証は未完了。 |
+| アプリ実装 | demo UI検証済み | ユーザーの明示依頼により、PoC結果を越える互換性を前提にしないBridge/Scheduler基盤とUI縦スライスを実装した。代表ビューポートで、fake App Serverによる実画面・操作検証を完了した。 |
 
 ## 5. 未決事項
 
@@ -77,10 +77,9 @@
 
 ## 7. 次に進める作業
 
-1. **UI検証** — ブラウザ連携を復旧し、代表viewportでworkspace/Thread/Turn縦スライスの実画面・操作を確認する。完了まで次のUI単位へ進まない。
-2. **MVP基盤** — App Server adapterとApproval Brokerの実機結合test、Gitのrename/binary/巨大diff処理を追加する。
-3. **P0: PoC-2残件** — VS Code共有、同一Thread/承認競合、変更を伴うworkspace別並行を検証する。
-4. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
+1. **MVP基盤** — App Server adapterとApproval Brokerの実機結合test、承認・障害表示の次のUI縦スライス、Gitのrename/binary/巨大diff処理を追加する。
+2. **P0: PoC-2残件** — VS Code共有、同一Thread/承認競合、変更を伴うworkspace別並行を検証する。
+3. **P1** — 復旧、モバイルPWA、Windows自動起動、大規模repo性能を検証する。
 
 アプリ本体の実装、フレームワーク初期化、依存関係の追加は、上記P0の結果とユーザーの明示指示を得るまで開始しない。
 
@@ -111,3 +110,4 @@
 - 2026-07-14: SMAIと衝突しないDeck専用の開発UI/APIポート`43173`/`43174`、Tailscale正規URL形式`https://codex-deck.<tailnet-name>.ts.net`、loopback bind方針を確定した。詳細は`docs/operations/CODEX_DECK_ENDPOINTS.md`を参照。
 - 2026-07-14: 実App ServerとDeck Approval Brokerを結合し、command approvalの受信、同一request IDへの`decline`、最小SQLite監査、App Server障害時の自動決定・再送なしを確認した。
 - 2026-07-14: 読み取り専用File/Git Adapterを拡張し、UTF-16/CP932表示、rename元・deleted file・remote名、bounded diff chunk取得を追加した。UIは`43173`、demo APIは`43174`でローカル表示できる。
+- 2026-07-15: UI縦スライスをfake App Serverで実画面・実操作検証した。390×844、768×1024、1280×900で表示、依頼開始、`work.started`、切断時の下書き保持を確認し、Vite開発プロキシのWebSocket中継を有効化した。実Codex・実端末・PWA通知は未確認。
